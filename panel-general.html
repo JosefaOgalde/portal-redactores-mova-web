@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MOVA — Panel general redactores</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --petroleo: #091914;
+      --petroleo2: #133429;
+      --verde: #93C64A;
+      --celeste: #99EADA;
+      --arena: #E1DFA7;
+      --arena-cl: #FBF6EB;
+      --txt: #FDFBF7;
+      --muted: rgba(253, 251, 247, 0.62);
+      --muted2: rgba(253, 251, 247, 0.38);
+      --line: rgba(147, 198, 74, 0.28);
+      --line-soft: rgba(253, 251, 247, 0.08);
+      --card: #0e1f19;
+      --card-hover: #122820;
+      --radius: 16px;
+      --sidebar-w: 220px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: "Lato", sans-serif;
+      background: var(--petroleo);
+      color: var(--txt);
+      display: flex;
+      min-height: 100vh;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 65% 45% at 12% -8%, rgba(147, 198, 74, 0.12), transparent 55%),
+        radial-gradient(ellipse 45% 40% at 92% 18%, rgba(153, 234, 218, 0.06), transparent 50%),
+        linear-gradient(180deg, var(--petroleo) 0%, var(--petroleo2) 48%, var(--petroleo) 100%);
+      z-index: 0;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 0.7rem 1.25rem;
+      font-family: "Instrument Sans", sans-serif;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.25s, color 0.25s, border-color 0.25s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--line-soft);
+      padding: 0.45rem 0.9rem;
+      font-size: 0.78rem;
+    }
+    .btn-ghost:hover { color: var(--txt); border-color: var(--line); }
+
+    .app {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      border-right: 1px solid var(--line-soft);
+      background: rgba(9, 25, 20, 0.88);
+      backdrop-filter: blur(12px);
+      padding: 1.25rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .side-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.25rem 0.35rem;
+      color: inherit;
+      text-decoration: none;
+    }
+    .side-brand:hover strong { color: var(--verde); }
+    .side-brand .mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: var(--verde);
+      color: var(--petroleo);
+      font-family: "Instrument Sans", sans-serif;
+      font-weight: 700;
+      font-size: 0.72rem;
+      display: grid;
+      place-items: center;
+    }
+    .side-brand strong {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      display: block;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+    .side-brand small {
+      color: var(--muted2);
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .side-label {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      padding: 0 0.4rem;
+      margin-bottom: 0.45rem;
+    }
+    .side-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      flex: 1;
+    }
+    .side-item {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.5rem 0.55rem;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--txt);
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .side-item:hover:not(:disabled) {
+      background: rgba(147, 198, 74, 0.12);
+      border-color: var(--line);
+    }
+    .side-item:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .side-item .ico {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: var(--verde);
+      color: var(--petroleo);
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.58rem;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .side-item .ico.dim {
+      background: rgba(147, 198, 74, 0.18);
+      color: var(--arena);
+    }
+    .side-item .live {
+      margin-left: auto;
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.52rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 0.15rem 0.35rem;
+      border-radius: 999px;
+      background: rgba(147, 198, 74, 0.16);
+      color: var(--verde);
+      border: 1px solid rgba(147, 198, 74, 0.4);
+    }
+    .side-foot {
+      padding: 0.5rem 0.35rem 0;
+      border-top: 1px solid var(--line-soft);
+      padding-top: 0.85rem;
+      font-size: 0.72rem;
+      color: var(--muted2);
+      line-height: 1.4;
+    }
+
+    .main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 1.75rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--line-soft);
+      background: rgba(9, 25, 20, 0.72);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .crumb {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .crumb b { color: var(--verde); font-weight: 700; }
+    .top-note {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.72rem;
+      color: var(--muted2);
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .content {
+      padding: 1.5rem 1.75rem 2.5rem;
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      flex: 1;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius);
+      padding: 1.6rem 1.75rem 1.5rem;
+      background: linear-gradient(115deg, var(--petroleo) 0%, var(--petroleo2) 55%, #1a4634 100%);
+      border: 1px solid var(--line);
+      margin-bottom: 1.15rem;
+      animation: rise 0.5s ease both;
+    }
+    .hero::after {
+      content: "CLIENTES";
+      position: absolute;
+      right: -0.05em;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: "Instrument Sans", sans-serif;
+      font-size: clamp(2.8rem, 8vw, 5.2rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+      color: rgba(147, 198, 74, 0.07);
+      pointer-events: none;
+      line-height: 1;
+    }
+    .hero-kicker {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--verde);
+      margin-bottom: 0.45rem;
+      position: relative;
+      z-index: 1;
+    }
+    .hero h1 {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: clamp(1.35rem, 3vw, 1.85rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      max-width: 30rem;
+      line-height: 1.15;
+      position: relative;
+      z-index: 1;
+    }
+    .hero p {
+      margin-top: 0.55rem;
+      max-width: 38rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+      font-weight: 300;
+      position: relative;
+      z-index: 1;
+    }
+
+    .sec-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.9rem;
+      flex-wrap: wrap;
+      animation: rise 0.55s 0.1s ease both;
+    }
+    .sec-head h2 {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--txt);
+    }
+    .sec-head p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.9rem;
+      animation: rise 0.6s 0.12s ease both;
+    }
+    .bullet {
+      background: var(--card);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius);
+      padding: 1.15rem 1.2rem 1.05rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      min-height: 168px;
+      position: relative;
+      transition: border-color 0.25s, background 0.25s, transform 0.25s;
+      color: inherit;
+      cursor: pointer;
+      text-align: left;
+      font: inherit;
+      width: 100%;
+    }
+    .bullet:hover:not(.locked):not(.nested-parent.is-open) {
+      background: var(--card-hover);
+      border-color: var(--line);
+      transform: translateY(-2px);
+    }
+    .bullet.locked {
+      opacity: 0.55;
+      cursor: default;
+    }
+    .bullet-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .bullet-ico {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: var(--verde);
+      color: var(--petroleo);
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+    }
+    .bullet.locked .bullet-ico {
+      background: rgba(147, 198, 74, 0.18);
+      color: var(--arena);
+    }
+    .badge-live {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 0.22rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(147, 198, 74, 0.16);
+      color: var(--verde);
+      border: 1px solid rgba(147, 198, 74, 0.4);
+    }
+    .badge-soon {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 0.22rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(253, 251, 247, 0.05);
+      color: var(--muted);
+      border: 1px solid var(--line-soft);
+    }
+    .bullet h3 {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+    }
+    .bullet .desc {
+      font-size: 0.86rem;
+      color: var(--muted);
+      line-height: 1.5;
+      font-weight: 300;
+      flex: 1;
+    }
+    .bullet-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-top: auto;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+    }
+    .tag {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.62rem;
+      font-weight: 500;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(253, 251, 247, 0.05);
+      color: var(--muted);
+      border: 1px solid var(--line-soft);
+    }
+    .abrir {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--verde);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .bullet.locked .abrir { color: var(--muted2); }
+
+    .nested-wrap {
+      grid-column: 1 / -1;
+      display: none;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.9rem;
+      padding: 0.15rem 0 0.25rem;
+      animation: rise 0.35s ease both;
+    }
+    .nested-wrap.open { display: grid; }
+    .nested-parent.is-open {
+      border-color: var(--line);
+      background: var(--card-hover);
+    }
+    .nested-parent .abrir .chev { transition: transform 0.2s; }
+    .nested-parent.is-open .abrir .chev { transform: rotate(90deg); }
+
+    .footer-note {
+      margin-top: 2rem;
+      text-align: center;
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted2);
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      .grid, .nested-wrap.open { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+    @media (max-width: 560px) {
+      .content { padding: 1.1rem 1rem 2rem; }
+      .topbar { padding: 0.85rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <aside class="sidebar" aria-label="Clientes">
+      <a class="side-brand" href="panel-general.html" title="Panel general">
+        <div class="mark">M</div>
+        <div>
+          <strong>MOVA</strong>
+          <small>Redactores</small>
+        </div>
+      </a>
+      <div>
+        <div class="side-label">Clientes</div>
+        <nav class="side-nav" id="sideNav"></nav>
+      </div>
+      <div class="side-foot">
+        MOVA · Redactores
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="crumb">MOVA / <b>Panel general</b></div>
+        <div class="top-note">Portal de entrada · redactores</div>
+      </header>
+
+      <div class="content">
+        <section class="hero">
+          <div class="hero-kicker">Portal de entrada</div>
+          <h1>Un portal por marca, una sola operación</h1>
+          <p>Elige el cliente para entrar al flujo.</p>
+        </section>
+
+        <div class="sec-head">
+          <div>
+            <h2>Bullets de cliente</h2>
+            <p>Paris LIVE · clic abre el portal del cliente</p>
+          </div>
+        </div>
+
+        <div class="grid" id="bulletGrid"></div>
+
+        <p class="footer-note">MOVA · Panel general redactores · mismo consolidado que MOVA</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CATALOG = [
+      {
+        id: "paris",
+        initials: "PR",
+        name: "Paris",
+        desc: "Portal del cliente · revisión y redacción independientes.",
+        tags: ["Retail", "Ecommerce", "2 pasos"],
+        live: true,
+        href: "portal-paris.html",
+      },
+    ];
+
+    const bulletGrid = document.getElementById("bulletGrid");
+    const sideNav = document.getElementById("sideNav");
+
+    function roots() {
+      return CATALOG.filter((c) => !c.parentId);
+    }
+
+    function childrenOf(parentId) {
+      return CATALOG.filter((c) => c.parentId === parentId);
+    }
+
+    function renderBulletCard(item) {
+      const locked = !item.live || !item.href;
+      const el = document.createElement(!locked ? "button" : "div");
+      if (!locked) el.type = "button";
+      el.className = "bullet" + (locked ? " locked" : "");
+      el.dataset.id = item.id;
+
+      const badge = !locked
+        ? '<span class="badge-live">LIVE</span>'
+        : '<span class="badge-soon">PRÓXIMO</span>';
+
+      el.innerHTML = `
+        <div class="bullet-top">
+          <div class="bullet-ico">${item.initials}</div>
+          ${badge}
+        </div>
+        <div>
+          <h3>${item.name}</h3>
+        </div>
+        <div class="bullet-foot">
+          <div class="tags">${(item.tags || []).map((t) => `<span class="tag">${t}</span>`).join("")}</div>
+          <span class="abrir">${locked ? "PRONTO" : "ABRIR ›"}</span>
+        </div>
+      `;
+
+      if (!locked) {
+        el.addEventListener("click", () => {
+          window.location.href = item.href;
+        });
+      }
+
+      return el;
+    }
+
+    function render() {
+      const top = roots();
+      bulletGrid.innerHTML = "";
+      sideNav.innerHTML = "";
+
+      top.forEach((item) => {
+        bulletGrid.appendChild(renderBulletCard(item));
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "side-item";
+        const canOpen = item.live && item.href;
+        if (!canOpen) btn.disabled = true;
+        btn.innerHTML = `
+          <span class="ico ${canOpen ? "" : "dim"}">${item.initials}</span>
+          <span>${item.name}</span>
+          ${canOpen ? '<span class="live">LIVE</span>' : ""}
+        `;
+        btn.addEventListener("click", () => {
+          if (canOpen) window.location.href = item.href;
+        });
+        sideNav.appendChild(btn);
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>
