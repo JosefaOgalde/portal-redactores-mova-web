@@ -3,11 +3,136 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MOVA × paris.cl — Portal Redactores</title>
+  <title>MOVA · Portal Redactores</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
   <style>
+
+/* ===== Shell accesos / redactor / editor (cPanel 1 HTML) ===== */
+#mova-shell-root, #mova-shell-root * { box-sizing: border-box; }
+#mova-shell-root {
+  --petroleo:#091914; --petroleo2:#133429; --verde:#93C64A; --celeste:#99EADA;
+  --txt:#FDFBF7; --muted:rgba(253,251,247,.62); --line:rgba(147,198,74,.28);
+  --line-soft:rgba(253,251,247,.08); --card:#0e1f19; --radius:16px;
+  font-family:"Lato",sans-serif; color:var(--txt); min-height:100vh;
+  background:var(--petroleo);
+}
+#mova-shell-root::before {
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(ellipse 65% 45% at 12% -8%, rgba(147,198,74,.14), transparent 55%),
+    radial-gradient(ellipse 45% 40% at 92% 18%, rgba(153,234,218,.08), transparent 50%),
+    linear-gradient(180deg, var(--petroleo) 0%, var(--petroleo2) 48%, var(--petroleo) 100%);
+}
+.mova-shell-view { display:none; position:relative; z-index:1; min-height:100vh; }
+.mova-shell-view.active { display:block; }
+.ms-wrap { max-width:920px; margin:0 auto; padding:2.5rem 1.25rem 3rem; }
+.ms-brand { display:flex; align-items:center; gap:.75rem; margin-bottom:2rem; }
+.ms-mark {
+  width:2.4rem; height:2.4rem; border-radius:10px; display:grid; place-items:center;
+  background:var(--verde); color:var(--petroleo); font-family:"Instrument Sans",sans-serif; font-weight:700;
+}
+.ms-brand strong { font-family:"Instrument Sans",sans-serif; font-size:1.15rem; display:block; }
+.ms-brand small { color:var(--muted); font-size:.8rem; }
+.ms-wrap h1 { font-family:"Instrument Sans",sans-serif; font-size:clamp(1.6rem,3vw,2.1rem); font-weight:700; margin-bottom:.45rem; }
+.ms-lead { color:var(--muted); max-width:36rem; line-height:1.5; margin-bottom:1.75rem; }
+.ms-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
+@media (max-width:800px){ .ms-grid { grid-template-columns:1fr; } }
+.ms-card {
+  display:flex; flex-direction:column; gap:.7rem; text-align:left; border:1px solid var(--line-soft);
+  background:var(--card); border-radius:var(--radius); padding:1.15rem 1.1rem 1.2rem; min-height:11.5rem;
+  color:inherit; cursor:pointer; font:inherit; transition:border-color .2s, transform .15s, background .2s;
+}
+.ms-card:not(.locked):hover { border-color:var(--line); background:#122820; transform:translateY(-2px); }
+.ms-card.locked { opacity:.55; cursor:default; }
+.ms-card .ico {
+  width:2.2rem; height:2.2rem; border-radius:8px; display:grid; place-items:center;
+  background:rgba(147,198,74,.18); color:var(--verde); font-family:"Instrument Sans",sans-serif; font-weight:700; font-size:.85rem;
+}
+.ms-card h2 { font-family:"Instrument Sans",sans-serif; font-size:1.05rem; font-weight:700; }
+.ms-card p { color:var(--muted); font-size:.86rem; line-height:1.45; flex:1; }
+.ms-card .foot { display:flex; justify-content:space-between; align-items:center; font-size:.75rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+.ms-card .foot .go { color:var(--verde); }
+.ms-card .foot .soon { color:var(--muted); }
+.ms-note { margin-top:1.5rem; padding:.9rem 1rem; border:1px solid var(--line-soft); border-radius:12px; color:var(--muted); font-size:.84rem; line-height:1.45; }
+.ms-app { display:flex; width:100%; min-height:100vh; }
+.ms-side {
+  width:220px; flex-shrink:0; border-right:1px solid var(--line-soft); background:rgba(9,25,20,.88);
+  padding:1.25rem .9rem; display:flex; flex-direction:column; gap:1.25rem;
+}
+.ms-side-brand { display:flex; align-items:center; gap:.65rem; color:inherit; text-decoration:none; cursor:pointer; background:none; border:0; font:inherit; padding:0; }
+.ms-side-label { font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:.45rem; }
+.ms-side-item {
+  width:100%; text-align:left; border:0; background:transparent; color:var(--txt);
+  display:flex; align-items:center; gap:.5rem; padding:.55rem .45rem; border-radius:10px; font:inherit; cursor:pointer;
+}
+.ms-side-item:hover { background:rgba(147,198,74,.12); }
+.ms-side-item .ico {
+  width:1.7rem; height:1.7rem; border-radius:7px; display:grid; place-items:center;
+  background:rgba(147,198,74,.18); color:var(--verde); font-size:.65rem; font-weight:800;
+}
+.ms-side-item .live { margin-left:auto; font-size:.62rem; font-weight:800; color:var(--verde); }
+.ms-side-foot { margin-top:auto; font-size:.72rem; color:var(--muted); }
+.ms-main { flex:1; min-width:0; }
+.ms-topbar {
+  display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap;
+  padding:1rem 1.5rem; border-bottom:1px solid var(--line-soft);
+}
+.ms-crumb { font-size:.85rem; color:var(--muted); }
+.ms-crumb b { color:var(--txt); }
+.ms-crumb button {
+  background:none; border:0; color:var(--celeste); font:inherit; cursor:pointer; padding:0;
+}
+.ms-content { padding:1.5rem; }
+.ms-kicker { font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--verde); margin-bottom:.35rem; }
+.ms-content h1 { font-family:"Instrument Sans",sans-serif; font-size:1.55rem; margin-bottom:.35rem; }
+.ms-content > p { color:var(--muted); margin-bottom:1.25rem; }
+.ms-who { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; margin-bottom:1.25rem; }
+.ms-who label { font-size:.75rem; color:var(--muted); }
+.ms-who select, .ms-who .pill {
+  background:#081410; border:1px solid var(--line-soft); color:var(--txt);
+  border-radius:999px; padding:.4rem .8rem; font:inherit;
+}
+.ms-who .pill { display:inline-flex; align-items:center; gap:.4rem; }
+.ms-who .pill strong { color:var(--verde); font-weight:700; }
+.ms-sec { margin:1.25rem 0 .85rem; }
+.ms-sec h2 { font-family:"Instrument Sans",sans-serif; font-size:1.05rem; }
+.ms-sec p { color:var(--muted); font-size:.84rem; }
+.ms-bullets { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:.85rem; }
+.ms-bullet {
+  text-align:left; border:1px solid var(--line-soft); background:var(--card);
+  border-radius:var(--radius); padding:1rem; color:inherit; cursor:pointer; font:inherit;
+  display:flex; flex-direction:column; gap:.7rem; min-height:9.5rem;
+}
+.ms-bullet:hover { border-color:var(--line); }
+.ms-bullet-top { display:flex; justify-content:space-between; align-items:center; }
+.ms-bullet-ico {
+  width:2rem; height:2rem; border-radius:8px; display:grid; place-items:center;
+  background:rgba(147,198,74,.18); color:var(--verde); font-weight:800; font-size:.75rem;
+}
+.ms-badge-live { font-size:.62rem; font-weight:800; color:var(--verde); letter-spacing:.04em; }
+.ms-bullet h3 { font-family:"Instrument Sans",sans-serif; font-size:1rem; }
+.ms-bullet-foot { display:flex; justify-content:space-between; align-items:end; gap:.5rem; margin-top:auto; }
+.ms-tag { font-size:.65rem; padding:.15rem .4rem; border-radius:999px; background:rgba(255,255,255,.06); color:var(--muted); margin-right:.25rem; }
+.ms-abrir { font-size:.72rem; font-weight:800; color:var(--verde); }
+.ms-who-bar {
+  position:sticky; top:0; z-index:40;
+  display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap;
+  padding:.55rem 1rem; background:rgba(9,25,20,.92); border-bottom:1px solid rgba(147,198,74,.28);
+  font-family:"Lato",sans-serif; font-size:.82rem; color:rgba(253,251,247,.75);
+}
+.ms-who-bar b { color:#93C64A; }
+.ms-who-bar button {
+  border:1px solid rgba(147,198,74,.35); background:rgba(147,198,74,.12); color:#FDFBF7;
+  border-radius:999px; padding:.35rem .75rem; font:inherit; cursor:pointer; font-size:.75rem; font-weight:700;
+}
+body.mova-in-shell #mova-paris-root { display:none; }
+body.mova-in-paris #mova-shell-root { display:none; }
+body.mova-in-paris #mova-paris-root { display:block; }
+body.mova-in-shell { background:#091914; }
+
+
     :root {
       --bg:#070b12; --bg2:#0c1420;
       --paris:#0066cc; --paris-b:#1a7ae8; --paris-d:#003d7a;
@@ -248,22 +373,115 @@
     .ob-card p{color:var(--muted);font-size:.9rem;line-height:1.55;overflow-wrap:anywhere}
     .ob-foot{display:flex;justify-content:space-between;gap:.5rem;margin-top:1.2rem;flex-wrap:wrap}
     .ob-foot .left{display:flex;gap:.4rem;flex-wrap:wrap}
+  
   </style>
 </head>
-<body>
+<body class="mova-in-shell">
+
+<div id="mova-shell-root">
+  <!-- ACCESOS -->
+  <section class="mova-shell-view active" id="view-accesos" data-view="accesos">
+    <div class="ms-wrap">
+      <div class="ms-brand">
+        <div class="ms-mark">M</div>
+        <div><strong>MOVA</strong><small>Grupo Making OF · Portal Redactores</small></div>
+      </div>
+      <h1>Elige tu acceso</h1>
+      <p class="ms-lead">No entras directo a Paris. Primero eliges rol: editor, redactor o cliente.</p>
+      <div class="ms-grid" id="msRoleGrid"></div>
+      <div class="ms-note">Para probar como redactora: entra a <b>Vista redactor</b> — sesión de <b>Adria</b> con Paris asignado.</div>
+    </div>
+  </section>
+
+  <!-- REDACTOR -->
+  <section class="mova-shell-view" id="view-redactor" data-view="redactor">
+    <div class="ms-app">
+      <aside class="ms-side">
+        <button type="button" class="ms-side-brand" data-mova-nav="accesos">
+          <div class="ms-mark">M</div>
+          <div><strong>MOVA</strong><small>Vista redactor</small></div>
+        </button>
+        <div>
+          <div class="ms-side-label">Mis clientes</div>
+          <nav id="msSideNav"></nav>
+        </div>
+        <div class="ms-side-foot">Solo clientes asignados</div>
+      </aside>
+      <div class="ms-main">
+        <header class="ms-topbar">
+          <div class="ms-crumb"><button type="button" data-mova-nav="accesos">Accesos</button> / <b>Vista redactor</b></div>
+          <div style="font-size:.78rem;color:var(--muted)">No ve el trabajo de otros redactores</div>
+        </header>
+        <div class="ms-content">
+          <div class="ms-kicker">Acceso redactor</div>
+          <h1>Tus clientes asignados</h1>
+          <p>Entras como redactora. Solo ves los clientes que te corresponden.</p>
+          <div class="ms-who">
+            <label>Redactora</label>
+            <span class="pill">Sesión · <strong id="msWhoName">Adria</strong></span>
+            <select id="msRedactorSel" aria-label="Elegir redactor" hidden></select>
+          </div>
+          <div class="ms-sec">
+            <h2>Clientes</h2>
+            <p id="msAssignNote">—</p>
+          </div>
+          <div class="ms-bullets" id="msBulletGrid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EDITOR -->
+  <section class="mova-shell-view" id="view-editor" data-view="editor">
+    <div class="ms-app">
+      <aside class="ms-side">
+        <button type="button" class="ms-side-brand" data-mova-nav="accesos">
+          <div class="ms-mark">M</div>
+          <div><strong>MOVA</strong><small>Vista editor</small></div>
+        </button>
+        <div>
+          <div class="ms-side-label">Clientes</div>
+          <nav id="msEditorSide"></nav>
+        </div>
+        <div class="ms-side-foot">Ve el trabajo de todos los redactores</div>
+      </aside>
+      <div class="ms-main">
+        <header class="ms-topbar">
+          <div class="ms-crumb"><button type="button" data-mova-nav="accesos">Accesos</button> / <b>Vista editor</b></div>
+          <div style="font-size:.78rem;color:var(--muted)">Supervisión completa</div>
+        </header>
+        <div class="ms-content">
+          <div class="ms-kicker">Acceso editor</div>
+          <h1>Todos los clientes</h1>
+          <p>Como editor ves Paris y lo que hacen las redactoras.</p>
+          <div class="ms-bullets" id="msEditorGrid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="mova-paris-root">
+
+<div class="ms-who-bar" id="msWhoBar">
+  <div>Entraste como <b id="msParisWho">Adria</b> · <span id="msParisRol">Redactora</span> · cliente <b>Paris</b></div>
+  <button type="button" id="msBackShell">Cambiar acceso / volver</button>
+</div>
+
+
   <header class="topbar">
     <div style="display:flex;align-items:center;gap:.85rem;flex-wrap:wrap">
-      <a class="btn-back" href="portal-paris.html" title="Volver a la vista Paris">
+      <a class="btn-back" href="#shell-redactor" data-mova-nav="shell" title="Volver a mis clientes">
         <span class="chev" aria-hidden="true">‹</span> Volver a Paris
       </a>
       <nav class="crumb-nav" aria-label="Ubicación">
-        <a href="panel-general.html">Vista editor</a>
+        <a href="#shell-accesos" data-mova-nav="accesos" id="crumbRole">Accesos</a>
         <span class="crumb-sep">›</span>
-        <a href="portal-paris.html">Paris</a>
+        <a href="#shell-redactor" data-mova-nav="shell">Paris</a>
         <span class="crumb-sep">›</span>
         <span class="crumb-now" id="crumbStep">1 · Revisión</span>
       </nav>
-      <a class="logo" href="panel-general.html" title="Ir a Vista editor"><div class="logo-mark">M</div>MOVA <span>×</span> paris.cl</a>
+      <a class="logo" href="#shell-accesos" data-mova-nav="accesos" title="Cambiar acceso"><div class="logo-mark">M</div>MOVA <span>×</span> paris.cl</a>
     </div>
     <div class="phase">
       <nav class="nav" aria-label="Secciones del portal">
@@ -1876,5 +2094,227 @@
     renderHist();
     renderBlocks();
   </script>
+
+</div>
+
+<script>
+(function () {
+  const LS = "mova-session-v1";
+  const CFG = {
+    empresa: "Grupo Making OF",
+    producto: "MOVA · Portal Redactores",
+    roles: {
+      editor: { id: "editor", label: "Vista editor", desc: "Ve el trabajo de todos los redactores y todos los clientes." },
+      redactor: { id: "redactor", label: "Vista redactor", desc: "Solo los clientes asignados a esa redactora." },
+      cliente: { id: "cliente", label: "Vista cliente", desc: "Pendiente. Se define después.", soon: true }
+    },
+    clientes: [
+      { id: "paris", initials: "PR", name: "Paris", tags: ["Retail", "Ecommerce", "2 pasos"], live: true }
+    ],
+    redactores: [
+      { id: "r-adria", nombre: "Adria", email: "", clientes: ["paris"] }
+    ]
+  };
+
+  function loadSession() {
+    try { return JSON.parse(localStorage.getItem(LS) || "null"); } catch (e) { return null; }
+  }
+  function saveSession(s) {
+    try { localStorage.setItem(LS, JSON.stringify(s)); } catch (e) {}
+  }
+  function clearParisHash() {
+    if (location.hash && location.hash.indexOf("paris") >= 0) {
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+  }
+
+  const shell = document.getElementById("mova-shell-root");
+  const parisRoot = document.getElementById("mova-paris-root");
+
+  function showShell(view) {
+    document.body.classList.add("mova-in-shell");
+    document.body.classList.remove("mova-in-paris");
+    shell.querySelectorAll(".mova-shell-view").forEach((el) => {
+      el.classList.toggle("active", el.getAttribute("data-view") === view);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function showParis(session) {
+    document.body.classList.remove("mova-in-shell");
+    document.body.classList.add("mova-in-paris");
+    const who = document.getElementById("msParisWho");
+    const rol = document.getElementById("msParisRol");
+    if (who) who.textContent = session.nombre || "Adria";
+    if (rol) rol.textContent = session.rol === "editor" ? "Editor" : "Redactora";
+    const crumb = document.getElementById("crumbRole");
+    if (crumb) crumb.textContent = session.rol === "editor" ? "Vista editor" : "Vista redactor";
+    window.scrollTo(0, 0);
+  }
+
+  function goAccesos() {
+    saveSession(null);
+    showShell("accesos");
+  }
+
+  function goRedactor(forceAdria) {
+    const r = CFG.redactores.find((x) => x.id === "r-adria") || CFG.redactores[0];
+    saveSession({ rol: "redactor", redactorId: r.id, nombre: r.nombre });
+    renderRedactor();
+    showShell("redactor");
+  }
+
+  function goEditor() {
+    saveSession({ rol: "editor", nombre: "Editor", redactorId: null });
+    renderEditor();
+    showShell("editor");
+  }
+
+  function openParis() {
+    const s = loadSession() || { rol: "redactor", nombre: "Adria", redactorId: "r-adria" };
+    saveSession(s);
+    showParis(s);
+  }
+
+  function renderRoles() {
+    const grid = document.getElementById("msRoleGrid");
+    if (!grid) return;
+    const order = ["editor", "redactor", "cliente"];
+    const icos = { editor: "ED", redactor: "RD", cliente: "CL" };
+    grid.innerHTML = "";
+    order.forEach((key) => {
+      const r = CFG.roles[key];
+      const locked = !!r.soon;
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = "ms-card" + (locked ? " locked" : "");
+      el.innerHTML = `
+        <div class="ico">${icos[key]}</div>
+        <h2>${r.label}</h2>
+        <p>${r.desc}</p>
+        <div class="foot"><span>${key}</span><span class="${locked ? "soon" : "go"}">${locked ? "Pronto" : "Entrar ›"}</span></div>`;
+      if (!locked) {
+        el.addEventListener("click", () => {
+          if (key === "redactor") goRedactor(true);
+          else if (key === "editor") goEditor();
+        });
+      }
+      grid.appendChild(el);
+    });
+  }
+
+  function assignedFor(redactor) {
+    const ids = new Set((redactor && redactor.clientes) || []);
+    return CFG.clientes.filter((c) => ids.has(c.id));
+  }
+
+  function renderRedactor() {
+    const s = loadSession();
+    const r = CFG.redactores.find((x) => x.id === (s && s.redactorId)) || CFG.redactores[0];
+    const nameEl = document.getElementById("msWhoName");
+    if (nameEl) nameEl.textContent = r.nombre;
+    const list = assignedFor(r);
+    const note = document.getElementById("msAssignNote");
+    if (note) note.textContent = `${r.nombre}: ${list.length} cliente(s) asignado(s).`;
+    const grid = document.getElementById("msBulletGrid");
+    const side = document.getElementById("msSideNav");
+    if (!grid || !side) return;
+    grid.innerHTML = "";
+    side.innerHTML = "";
+    list.forEach((item) => {
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = "ms-bullet";
+      el.innerHTML = `
+        <div class="ms-bullet-top"><div class="ms-bullet-ico">${item.initials}</div><span class="ms-badge-live">LIVE</span></div>
+        <h3>${item.name}</h3>
+        <div class="ms-bullet-foot">
+          <div>${(item.tags || []).map((t) => `<span class="ms-tag">${t}</span>`).join("")}</div>
+          <span class="ms-abrir">ABRIR ›</span>
+        </div>`;
+      el.addEventListener("click", openParis);
+      grid.appendChild(el);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ms-side-item";
+      btn.innerHTML = `<span class="ico">${item.initials}</span><span>${item.name}</span><span class="live">LIVE</span>`;
+      btn.addEventListener("click", openParis);
+      side.appendChild(btn);
+    });
+  }
+
+  function renderEditor() {
+    const grid = document.getElementById("msEditorGrid");
+    const side = document.getElementById("msEditorSide");
+    if (!grid || !side) return;
+    grid.innerHTML = "";
+    side.innerHTML = "";
+    CFG.clientes.forEach((item) => {
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = "ms-bullet";
+      el.innerHTML = `
+        <div class="ms-bullet-top"><div class="ms-bullet-ico">${item.initials}</div><span class="ms-badge-live">LIVE</span></div>
+        <h3>${item.name}</h3>
+        <div class="ms-bullet-foot">
+          <div>${(item.tags || []).map((t) => `<span class="ms-tag">${t}</span>`).join("")}</div>
+          <span class="ms-abrir">ABRIR ›</span>
+        </div>`;
+      el.addEventListener("click", () => {
+        saveSession({ rol: "editor", nombre: "Editor", redactorId: null });
+        openParis();
+      });
+      grid.appendChild(el);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ms-side-item";
+      btn.innerHTML = `<span class="ico">${item.initials}</span><span>${item.name}</span><span class="live">LIVE</span>`;
+      btn.addEventListener("click", () => {
+        saveSession({ rol: "editor", nombre: "Editor", redactorId: null });
+        openParis();
+      });
+      side.appendChild(btn);
+    });
+  }
+
+  document.addEventListener("click", (ev) => {
+    const nav = ev.target.closest("[data-mova-nav]");
+    if (!nav) return;
+    ev.preventDefault();
+    const to = nav.getAttribute("data-mova-nav");
+    if (to === "accesos") goAccesos();
+    else if (to === "shell") {
+      const s = loadSession();
+      if (s && s.rol === "editor") goEditor();
+      else goRedactor(true);
+    }
+  });
+
+  const back = document.getElementById("msBackShell");
+  if (back) {
+    back.addEventListener("click", () => {
+      const s = loadSession();
+      if (s && s.rol === "editor") goEditor();
+      else goRedactor(true);
+    });
+  }
+
+  // Boot: siempre accesos primero (no Paris directo), salvo sesión redactor/editor sin forzar paris
+  renderRoles();
+  const boot = loadSession();
+  document.body.classList.add("mova-in-shell");
+  if (boot && boot.rol === "editor") {
+    renderEditor();
+    showShell("editor");
+  } else if (boot && boot.rol === "redactor") {
+    renderRedactor();
+    showShell("redactor");
+  } else {
+    // Default demo path awareness: still start at accesos so user "entra como Adria"
+    goAccesos();
+  }
+})();
+</script>
+
 </body>
 </html>

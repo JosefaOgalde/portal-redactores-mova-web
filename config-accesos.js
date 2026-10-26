@@ -53,8 +53,8 @@ window.MOVA_CONFIG = {
    */
   redactores: [
     {
-      id: "r-demo",
-      nombre: "Redactor demo",
+      id: "r-adria",
+      nombre: "Adria",
       email: "",
       clientes: ["paris"],
     },
