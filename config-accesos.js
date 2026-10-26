@@ -80,14 +80,16 @@ window.MOVA_CONFIG = {
    * Claude + Drive debe leer los Sheets y proponer estos flujos.
    */
   n8n: {
-    baseUrl: "",
+    baseUrl: "https://grupomakingof.app.n8n.cloud",
     webhooks: {
-      syncHistorico: "",
-      syncContenidos: "",
+      auth: "https://grupomakingof.app.n8n.cloud/webhook/mova-auth",
+      syncHistorico: "https://grupomakingof.app.n8n.cloud/webhook/mova-sync-historico",
+      syncContenidos: "https://grupomakingof.app.n8n.cloud/webhook/mova-sync-contenidos",
       revisionListo: "",
-      guardarTexto: "",
-      vbEditor: "",
+      guardarTexto: "https://grupomakingof.app.n8n.cloud/webhook/mova-guardar-texto",
+      vbEditor: "https://grupomakingof.app.n8n.cloud/webhook/mova-vb-editor",
     },
+    googleClientId: "352285024176-ki6a4n01f6vcbos3o12n9ql6uc6t2vq4.apps.googleusercontent.com",
     flujosPendientes: [
       "Leer Sheet URLs trabajadas → alimentar histórico del portal",
       "Leer pestañas mes del consolidado → ITEMS por Semana 1–4",

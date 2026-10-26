@@ -378,9 +378,43 @@ body.mova-in-shell { background:#091914; }
     .ob-foot{display:flex;justify-content:space-between;gap:.5rem;margin-top:1.2rem;flex-wrap:wrap}
     .ob-foot .left{display:flex;gap:.4rem;flex-wrap:wrap}
   
+
+/* ===== Google Sign-In gate ===== */
+body.mv-lock #mova-shell-root,
+body.mv-lock #mova-paris-root{visibility:hidden!important;pointer-events:none!important}
+#mvGate{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 84% 14%,rgba(110,170,150,.55) 0,rgba(110,170,150,0) 42%),radial-gradient(circle at 8% 96%,rgba(112,150,60,.55) 0,rgba(112,150,60,0) 40%),linear-gradient(150deg,#1E4436 0%,#122B22 100%)}
+#mvGate.off{display:none!important;visibility:hidden!important;pointer-events:none!important}
+.mv-card{width:100%;max-width:520px;background:#F2F1EC;border-radius:28px;padding:44px 40px 48px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.mv-logo{font:600 11px "Instrument Sans",sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#2A5A49;margin-bottom:10px}
+.mv-t{font:800 clamp(1.6rem,3vw,2rem)/1.1 "Instrument Sans",sans-serif;color:#091914;margin-bottom:.45rem}
+.mv-t span{color:#56742A}
+.mv-sub{color:#5C7468;font-size:.92rem;line-height:1.45;margin:0 auto 1.35rem;max-width:28rem}
+#mvBtn{min-height:44px;display:flex;align-items:center;justify-content:center}
+.mv-local{display:block;margin:14px auto 0;background:transparent;border:1px solid rgba(9,25,20,.18);border-radius:999px;padding:11px 22px;color:#2A5A49;font:600 12px "Instrument Sans",sans-serif;letter-spacing:.03em;text-transform:uppercase;cursor:pointer}
+.mv-local:hover{background:rgba(9,25,20,.05)}
+.mv-msg{margin-top:18px;font-size:13px;line-height:1.55;padding:12px 14px;border-radius:14px;display:none;text-align:left}
+.mv-msg.on{display:block}
+.mv-msg.err{background:#FBEBD2;border:1px solid rgba(168,101,15,.25);color:#7A4A0C}
+.mv-msg.load{background:#EAF2EE;border:1px solid rgba(9,25,20,.09);color:#2A5A49}
+.ms-userchip{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;color:var(--muted)}
+.ms-userchip b{color:var(--verde)}
+.ms-salir{border:1px solid var(--line-soft);background:transparent;color:var(--muted);border-radius:999px;padding:.3rem .7rem;font:inherit;font-size:.72rem;font-weight:700;cursor:pointer}
+.ms-salir:hover{color:var(--txt);border-color:var(--line)}
+
   </style>
 </head>
-<body class="mova-in-shell">
+<body class="mova-in-shell mv-lock">
+
+<div id="mvGate" role="dialog" aria-modal="true" aria-label="Acceso restringido">
+  <div class="mv-card">
+    <div class="mv-logo">Grupo Making OF</div>
+    <div class="mv-t">MOVA <span>Redactores</span></div>
+    <div class="mv-sub">Portal de redacción · Acceso con tu cuenta Google autorizada</div>
+    <div id="mvBtn"></div>
+    <div class="mv-msg" id="mvMsg"></div>
+  </div>
+</div>
+
 
 <div id="mova-shell-root">
   <!-- ACCESOS -->
@@ -391,9 +425,9 @@ body.mova-in-shell { background:#091914; }
         <div><strong>MOVA</strong><small>Grupo Making OF · Portal Redactores</small></div>
       </div>
       <h1>Elige tu acceso</h1>
-      <p class="ms-lead">Entras como redactora. Editor y cliente no están disponibles en este acceso.</p>
+      <p class="ms-lead">Tras validar tu Google, entras como redactora. Editor y cliente no están disponibles aquí.</p>
       <div class="ms-grid" id="msRoleGrid"></div>
-      <div class="ms-note">Tu acceso: <b>Vista redactor</b> · sesión <b>Adria</b> · cliente Paris. Las otras puertas están bloqueadas.</div>
+      <div class="ms-note">Solo <b>Vista redactor</b> está habilitada. Editor y cliente aparecen bloqueados.</div>
     </div>
   </section>
 
@@ -464,8 +498,8 @@ body.mova-in-shell { background:#091914; }
 <div id="mova-paris-root">
 
 <div class="ms-who-bar" id="msWhoBar">
-  <div>Entraste como <b id="msParisWho">Adria</b> · <span id="msParisRol">Redactora</span> · cliente <b>Paris</b></div>
-  <button type="button" id="msBackShell">Cambiar acceso / volver</button>
+  <div>Entraste como <b id="msParisWho">—</b> · <span id="msParisRol">Redactora</span> · cliente <b>Paris</b></div>
+  <button type="button" id="msBackShell">Volver a mis clientes</button>
 </div>
 
 
@@ -2097,9 +2131,17 @@ body.mova-in-shell { background:#091914; }
 
 </div>
 
+
 <script>
 (function () {
   const LS = "mova-session-v1";
+  const AUTH_KEY = "mova_redactores_sesion";
+  const AUTH_TTL = 8 * 60 * 60 * 1000;
+  const MV = {
+    cliente: "352285024176-ki6a4n01f6vcbos3o12n9ql6uc6t2vq4.apps.googleusercontent.com",
+    auth: "https://grupomakingof.app.n8n.cloud/webhook/mova-auth",
+    empresa: "REDACTORES"
+  };
   const CFG = {
     empresa: "Grupo Making OF",
     producto: "MOVA · Portal Redactores",
@@ -2110,11 +2152,14 @@ body.mova-in-shell { background:#091914; }
     },
     clientes: [
       { id: "paris", initials: "PR", name: "Paris", tags: ["Retail", "Ecommerce", "2 pasos"], live: true }
-    ],
-    redactores: [
-      { id: "r-adria", nombre: "Adria", email: "", clientes: ["paris"] }
     ]
   };
+
+  const shell = document.getElementById("mova-shell-root");
+  const MV_LOCAL = location.protocol === "file:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname || "");
+  const MV_PROD = /(?:^|\.)acme-chile\.cl$/i.test(location.hostname || "");
+  let MV_IFRAME = false;
+  try { MV_IFRAME = window.top !== window.self; } catch (e) { MV_IFRAME = true; }
 
   function loadSession() {
     try { return JSON.parse(localStorage.getItem(LS) || "null"); } catch (e) { return null; }
@@ -2122,14 +2167,54 @@ body.mova-in-shell { background:#091914; }
   function saveSession(s) {
     try { localStorage.setItem(LS, JSON.stringify(s)); } catch (e) {}
   }
-  function clearParisHash() {
-    if (location.hash && location.hash.indexOf("paris") >= 0) {
-      history.replaceState(null, "", location.pathname + location.search);
-    }
+  function loadAuth() {
+    try { return JSON.parse(sessionStorage.getItem(AUTH_KEY) || "null"); } catch (e) { return null; }
   }
-
-  const shell = document.getElementById("mova-shell-root");
-  const parisRoot = document.getElementById("mova-paris-root");
+  function saveAuth(payload) {
+    try { sessionStorage.setItem(AUTH_KEY, JSON.stringify(payload)); } catch (e) {}
+  }
+  function clearAuth() {
+    try { sessionStorage.removeItem(AUTH_KEY); } catch (e) {}
+    try { localStorage.removeItem(LS); } catch (e) {}
+    window.MOVA_USER = null;
+    window.MOVA_TOKEN = "";
+  }
+  function tokExp(t) {
+    try {
+      return (JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).exp || 0) * 1000;
+    } catch (e) { return 0; }
+  }
+  function mailFromTok(t) {
+    try {
+      return (JSON.parse(decodeURIComponent(escape(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))))) || {}).email || "";
+    } catch (e) { return ""; }
+  }
+  function mvAviso(t, tipo) {
+    const m = document.getElementById("mvMsg");
+    if (!m) return;
+    m.textContent = t || "";
+    m.className = "mv-msg" + (t ? " on " + (tipo || "err") : "");
+  }
+  function mvCerrarGate() {
+    const gate = document.getElementById("mvGate");
+    if (gate) {
+      gate.classList.add("off");
+      gate.setAttribute("aria-hidden", "true");
+      gate.style.display = "none";
+    }
+    document.body.classList.remove("mv-lock");
+  }
+  function mvAbrirGate() {
+    const gate = document.getElementById("mvGate");
+    if (gate) {
+      gate.classList.remove("off");
+      gate.removeAttribute("aria-hidden");
+      gate.style.display = "flex";
+    }
+    document.body.classList.add("mv-lock");
+    document.body.classList.add("mova-in-shell");
+    document.body.classList.remove("mova-in-paris");
+  }
 
   function showShell(view) {
     document.body.classList.add("mova-in-shell");
@@ -2145,32 +2230,54 @@ body.mova-in-shell { background:#091914; }
     document.body.classList.add("mova-in-paris");
     const who = document.getElementById("msParisWho");
     const rol = document.getElementById("msParisRol");
-    if (who) who.textContent = session.nombre || "Adria";
+    if (who) who.textContent = session.nombre || (window.MOVA_USER && window.MOVA_USER.nombre) || "Redactora";
     if (rol) rol.textContent = session.rol === "editor" ? "Editor" : "Redactora";
     const crumb = document.getElementById("crumbRole");
     if (crumb) crumb.textContent = session.rol === "editor" ? "Vista editor" : "Vista redactor";
     window.scrollTo(0, 0);
   }
 
-  function goAccesos() {
-    saveSession(null);
-    showShell("accesos");
+  function syncUserChip() {
+    const u = window.MOVA_USER;
+    document.querySelectorAll("[data-ms-user]").forEach((el) => {
+      el.textContent = u ? (u.nombre || u.correo || "") : "";
+    });
   }
 
-  function goRedactor(forceAdria) {
-    const r = CFG.redactores.find((x) => x.id === "r-adria") || CFG.redactores[0];
-    saveSession({ rol: "redactor", redactorId: r.id, nombre: r.nombre });
+  function clienteListForSession(s) {
+    const ids = (s && Array.isArray(s.clientes)) ? s.clientes.map((x) => String(x).toLowerCase().trim()).filter(Boolean) : [];
+    if (!ids.length) return CFG.clientes.slice();
+    return CFG.clientes.filter((c) => ids.includes(c.id) || ids.includes(String(c.name).toLowerCase()));
+  }
+
+  function goAccesos() {
+    // No cierra Google; solo vuelve a la puerta de roles (editor/cliente bloqueados)
+    showShell("accesos");
+    renderRoles();
+  }
+
+  function goRedactor() {
+    const auth = loadAuth();
+    const u = (auth && auth.u) || window.MOVA_USER || {};
+    const s = {
+      rol: "redactor",
+      redactorId: "r-auth",
+      nombre: u.nombre || "Redactora",
+      correo: u.correo || "",
+      clientes: Array.isArray(u.clientes) ? u.clientes : (auth && auth.u && auth.u.clientes) || []
+    };
+    saveSession(s);
     renderRedactor();
     showShell("redactor");
+    syncUserChip();
   }
 
   function goEditor() {
-    // Bloqueado en paquete redactora
     goAccesos();
   }
 
   function openParis() {
-    const s = loadSession() || { rol: "redactor", nombre: "Adria", redactorId: "r-adria" };
+    const s = loadSession() || { rol: "redactor", nombre: (window.MOVA_USER && window.MOVA_USER.nombre) || "Redactora" };
     saveSession(s);
     showParis(s);
   }
@@ -2183,7 +2290,7 @@ body.mova-in-shell { background:#091914; }
     grid.innerHTML = "";
     order.forEach((key) => {
       const r = CFG.roles[key];
-      const locked = !!r.soon;
+      const locked = !!r.soon || key !== "redactor";
       const el = document.createElement("button");
       el.type = "button";
       el.className = "ms-card" + (locked ? " locked" : "");
@@ -2191,11 +2298,9 @@ body.mova-in-shell { background:#091914; }
         <div class="ico">${icos[key]}</div>
         <h2>${r.label}</h2>
         <p>${r.desc}</p>
-        <div class="foot"><span>${key}</span><span class="${locked || key !== "redactor" ? "soon" : "go"}">${key === "redactor" && !locked ? "Entrar ›" : "Sin acceso"}</span></div>`;
-      if (!locked && key === "redactor") {
-        el.addEventListener("click", () => goRedactor(true));
-      } else {
-        el.classList.add("locked");
+        <div class="foot"><span>${key}</span><span class="${locked ? "soon" : "go"}">${locked ? "Sin acceso" : "Entrar ›"}</span></div>`;
+      if (!locked) el.addEventListener("click", () => goRedactor());
+      else {
         el.disabled = true;
         el.setAttribute("aria-disabled", "true");
       }
@@ -2203,24 +2308,22 @@ body.mova-in-shell { background:#091914; }
     });
   }
 
-  function assignedFor(redactor) {
-    const ids = new Set((redactor && redactor.clientes) || []);
-    return CFG.clientes.filter((c) => ids.has(c.id));
-  }
-
   function renderRedactor() {
-    const s = loadSession();
-    const r = CFG.redactores.find((x) => x.id === (s && s.redactorId)) || CFG.redactores[0];
+    const s = loadSession() || {};
     const nameEl = document.getElementById("msWhoName");
-    if (nameEl) nameEl.textContent = r.nombre;
-    const list = assignedFor(r);
+    if (nameEl) nameEl.textContent = s.nombre || "Redactora";
+    const list = clienteListForSession(s);
     const note = document.getElementById("msAssignNote");
-    if (note) note.textContent = `${r.nombre}: ${list.length} cliente(s) asignado(s).`;
+    if (note) note.textContent = `${s.nombre || "Redactora"}: ${list.length} cliente(s).`;
     const grid = document.getElementById("msBulletGrid");
     const side = document.getElementById("msSideNav");
     if (!grid || !side) return;
     grid.innerHTML = "";
     side.innerHTML = "";
+    if (!list.length) {
+      grid.innerHTML = '<div class="empty" style="color:var(--muted)">No hay clientes asignados a tu cuenta.</div>';
+      return;
+    }
     list.forEach((item) => {
       const el = document.createElement("button");
       el.type = "button";
@@ -2243,38 +2346,112 @@ body.mova-in-shell { background:#091914; }
     });
   }
 
-  function renderEditor() {
-    const grid = document.getElementById("msEditorGrid");
-    const side = document.getElementById("msEditorSide");
-    if (!grid || !side) return;
-    grid.innerHTML = "";
-    side.innerHTML = "";
-    CFG.clientes.forEach((item) => {
-      const el = document.createElement("button");
-      el.type = "button";
-      el.className = "ms-bullet";
-      el.innerHTML = `
-        <div class="ms-bullet-top"><div class="ms-bullet-ico">${item.initials}</div><span class="ms-badge-live">LIVE</span></div>
-        <h3>${item.name}</h3>
-        <div class="ms-bullet-foot">
-          <div>${(item.tags || []).map((t) => `<span class="ms-tag">${t}</span>`).join("")}</div>
-          <span class="ms-abrir">ABRIR ›</span>
-        </div>`;
-      el.addEventListener("click", () => {
-        saveSession({ rol: "editor", nombre: "Editor", redactorId: null });
-        openParis();
-      });
-      grid.appendChild(el);
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "ms-side-item";
-      btn.innerHTML = `<span class="ico">${item.initials}</span><span>${item.name}</span><span class="live">LIVE</span>`;
-      btn.addEventListener("click", () => {
-        saveSession({ rol: "editor", nombre: "Editor", redactorId: null });
-        openParis();
-      });
-      side.appendChild(btn);
-    });
+  function afterAuthEnter(u, tok) {
+    const exp = tok ? Math.min(tokExp(tok) || 0, Date.now() + AUTH_TTL) : Date.now() + AUTH_TTL;
+    const user = {
+      nombre: u.nombre || "",
+      correo: u.correo || "",
+      nivel: u.nivel || "",
+      rol: u.rol || "redactor",
+      clientes: Array.isArray(u.clientes) ? u.clientes : []
+    };
+    saveAuth({ u: user, tok: tok || "", exp: exp });
+    window.MOVA_USER = user;
+    window.MOVA_TOKEN = tok || "";
+    mvAviso("");
+    mvCerrarGate();
+    syncUserChip();
+
+    const rol = String(user.rol || "").toLowerCase();
+    if (rol === "redactor") {
+      goRedactor();
+      return;
+    }
+    if (rol === "editor") {
+      mvAbrirGate();
+      mvAviso("Tu cuenta es de editor. Este HTML es el acceso de redactora. Usa el portal de Vista editor.", "err");
+      clearAuth();
+      return;
+    }
+    mvAbrirGate();
+    mvAviso("Tu cuenta no tiene acceso de redactora en este portal.", "err");
+    clearAuth();
+  }
+
+  function mvSalir() {
+    clearAuth();
+    try {
+      if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect();
+    } catch (e) {}
+    location.reload();
+  }
+
+  function mvValidar(token) {
+    mvAviso("Validando acceso…", "load");
+    fetch(MV.auth, {
+      method: "POST",
+      cache: "no-store",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ token: token, empresa: MV.empresa })
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        d = Array.isArray(d) ? d[0] : d;
+        if (d && d.ok === true) {
+          const rol = String(d.rol || "").toLowerCase();
+          if (rol && rol !== "redactor" && rol !== "editor") {
+            mvAviso((d && d.motivo) || "Tu cuenta no está autorizada para este portal.");
+            return;
+          }
+          if (rol === "editor") {
+            mvAviso("Tu cuenta es de editor. Este archivo es el acceso de redactora.");
+            return;
+          }
+          afterAuthEnter({
+            nombre: d.nombre || "",
+            correo: d.correo || mailFromTok(token),
+            nivel: d.nivel || "",
+            rol: d.rol || "redactor",
+            clientes: d.clientes || []
+          }, token);
+        } else {
+          mvAviso((d && d.motivo) || "Tu cuenta no está autorizada para acceder a este portal. Contacta a tu ejecutivo de Grupo Making OF.");
+        }
+      })
+      .catch(() => mvAviso("No pudimos validar tu acceso. Reintenta en unos segundos."));
+  }
+
+  function bootGoogle() {
+    mvAviso("Inicia sesión con Google para entrar.", "load");
+    const sc = document.createElement("script");
+    sc.src = "https://accounts.google.com/gsi/client";
+    sc.async = true;
+    sc.defer = true;
+    sc.onload = function () {
+      try {
+        google.accounts.id.initialize({
+          client_id: MV.cliente,
+          callback: (r) => { if (r && r.credential) mvValidar(r.credential); },
+          auto_select: false,
+          cancel_on_tap_outside: true
+        });
+        google.accounts.id.renderButton(document.getElementById("mvBtn"), {
+          theme: "filled_black",
+          size: "large",
+          shape: "pill",
+          text: "signin_with",
+          width: 330,
+          locale: "es"
+        });
+        mvAviso("");
+      } catch (e) {
+        mvAviso("No pudimos cargar el inicio de sesión de Google. Recarga la página.");
+      }
+    };
+    sc.onerror = function () {
+      mvAviso("No pudimos cargar Google. Abre el portal en acme-chile.cl e inténtalo de nuevo.");
+    };
+    document.head.appendChild(sc);
   }
 
   document.addEventListener("click", (ev) => {
@@ -2283,38 +2460,62 @@ body.mova-in-shell { background:#091914; }
     ev.preventDefault();
     const to = nav.getAttribute("data-mova-nav");
     if (to === "accesos") goAccesos();
-    else if (to === "shell") {
-      const s = loadSession();
-      if (s && s.rol === "editor") goEditor();
-      else goRedactor(true);
-    }
+    else if (to === "shell") goRedactor();
+    else if (to === "salir") mvSalir();
   });
 
   const back = document.getElementById("msBackShell");
-  if (back) {
-    back.addEventListener("click", () => {
-      const s = loadSession();
-      if (s && s.rol === "editor") goEditor();
-      else goRedactor(true);
-    });
+  if (back) back.addEventListener("click", () => goRedactor());
+
+  // Chip usuario + salir en topbar redactor
+  const topNote = document.querySelector("#view-redactor .ms-topbar > div:last-child");
+  if (topNote) {
+    topNote.innerHTML = '<span class="ms-userchip">Sesión · <b data-ms-user></b></span> <button type="button" class="ms-salir" data-mova-nav="salir">Salir</button>';
   }
 
-  // Boot: siempre accesos primero (no Paris directo), salvo sesión redactor/editor sin forzar paris
   renderRoles();
-  const boot = loadSession();
   document.body.classList.add("mova-in-shell");
-  // Paquete redactora: nunca abrir editor/cliente; solo redactor o pantalla de acceso
-  if (boot && boot.rol === "editor") {
-    try { localStorage.removeItem(LS); } catch (e) {}
-    goAccesos();
-  } else if (boot && boot.rol === "redactor") {
-    renderRedactor();
-    showShell("redactor");
-  } else {
-    goAccesos();
+
+  // Sesión Google vigente
+  const previa = loadAuth();
+  if (previa && previa.exp > Date.now() && previa.u && previa.u.rol === "redactor") {
+    window.MOVA_USER = previa.u;
+    window.MOVA_TOKEN = previa.tok || "";
+    mvCerrarGate();
+    goRedactor();
+    return;
   }
+
+  // Notion / iframe preview: no trabar
+  if (MV_IFRAME || (!MV_PROD && !MV_LOCAL && location.protocol !== "file:")) {
+    mvAviso("Vista previa: Google no funciona aquí. Abriendo vista redactora de demostración…", "load");
+    setTimeout(function () {
+      afterAuthEnter({ nombre: "Vista previa", correo: "preview@local", rol: "redactor", clientes: ["paris"] }, "");
+    }, 250);
+    return;
+  }
+
+  if (MV_LOCAL) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "mv-local";
+    b.textContent = "Entrar (local, sin Google)";
+    b.onclick = function () {
+      afterAuthEnter({ nombre: "Adria", correo: "adria@local", rol: "redactor", nivel: "Redactor", clientes: ["paris"] }, "");
+    };
+    const card = document.querySelector(".mv-card");
+    if (card) card.insertBefore(b, document.getElementById("mvMsg"));
+  }
+  if (location.protocol === "file:") {
+    mvAviso("Archivo local: usa el botón de abajo o súbelo a acme-chile.cl para Google Sign-In.", "load");
+    return;
+  }
+
+  bootGoogle();
 })();
 </script>
+
+
 
 </body>
 </html>
