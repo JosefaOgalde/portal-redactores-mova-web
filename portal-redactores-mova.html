@@ -419,15 +419,11 @@ body.mova-in-shell { background:#091914; }
         <div class="ms-content">
           <div class="ms-kicker">Acceso redactor</div>
           <h1>Tus clientes asignados</h1>
-          <p>Entras como redactora. Solo ves los clientes que te corresponden.</p>
-          <div class="ms-who">
-            <label>Redactora</label>
-            <span class="pill">Sesión · <strong id="msWhoName">Adria</strong></span>
-            <select id="msRedactorSel" aria-label="Elegir redactor" hidden></select>
-          </div>
+          <select id="msRedactorSel" aria-label="Elegir redactor" hidden></select>
+          <span id="msWhoName" hidden>Adria</span>
           <div class="ms-sec">
             <h2>Clientes</h2>
-            <p id="msAssignNote">—</p>
+            <p id="msAssignNote" hidden>—</p>
           </div>
           <div class="ms-bullets" id="msBulletGrid"></div>
         </div>
