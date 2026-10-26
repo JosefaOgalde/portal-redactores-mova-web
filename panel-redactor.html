@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MOVA — Vista redactor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --petroleo: #091914; --petroleo2: #133429; --verde: #93C64A; --celeste: #99EADA;
+      --txt: #FDFBF7; --muted: rgba(253,251,247,.62); --line: rgba(147,198,74,.28);
+      --line-soft: rgba(253,251,247,.08); --card: #0e1f19; --radius: 16px; --sidebar-w: 220px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { min-height: 100vh; font-family: "Lato", sans-serif; background: var(--petroleo); color: var(--txt); display: flex; }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 65% 45% at 12% -8%, rgba(147,198,74,.12), transparent 55%),
+        linear-gradient(180deg, var(--petroleo) 0%, var(--petroleo2) 48%, var(--petroleo) 100%);
+    }
+    .app { display: flex; width: 100%; min-height: 100vh; position: relative; z-index: 1; }
+    .sidebar {
+      width: var(--sidebar-w); flex-shrink: 0; border-right: 1px solid var(--line-soft);
+      background: rgba(9,25,20,.88); padding: 1.25rem .9rem; display: flex; flex-direction: column; gap: 1.25rem;
+    }
+    .side-brand { display: flex; align-items: center; gap: .65rem; color: inherit; text-decoration: none; }
+    .mark {
+      width: 2.1rem; height: 2.1rem; border-radius: 9px; display: grid; place-items: center;
+      background: var(--verde); color: var(--petroleo); font-family: "Instrument Sans", sans-serif; font-weight: 700;
+    }
+    .side-brand strong { display: block; font-family: "Instrument Sans", sans-serif; font-size: .95rem; }
+    .side-brand small { color: var(--muted); font-size: .72rem; }
+    .side-label { font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: .45rem; }
+    .side-item {
+      width: 100%; text-align: left; border: 0; background: transparent; color: var(--txt);
+      display: flex; align-items: center; gap: .5rem; padding: .55rem .45rem; border-radius: 10px;
+      font: inherit; cursor: pointer;
+    }
+    .side-item:hover { background: rgba(147,198,74,.12); }
+    .side-item:disabled { opacity: .4; cursor: default; }
+    .side-item .ico {
+      width: 1.7rem; height: 1.7rem; border-radius: 7px; display: grid; place-items: center;
+      background: rgba(147,198,74,.18); color: var(--verde); font-size: .65rem; font-weight: 800;
+    }
+    .side-item .live { margin-left: auto; font-size: .62rem; font-weight: 800; color: var(--verde); }
+    .side-foot { margin-top: auto; font-size: .72rem; color: var(--muted); }
+    .main { flex: 1; min-width: 0; }
+    .topbar {
+      display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+      padding: 1rem 1.5rem; border-bottom: 1px solid var(--line-soft);
+    }
+    .crumb { font-size: .85rem; color: var(--muted); }
+    .crumb b { color: var(--txt); }
+    .crumb a { color: var(--celeste); text-decoration: none; }
+    .top-note { font-size: .78rem; color: var(--muted); }
+    .content { padding: 1.5rem; }
+    .hero-kicker { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--verde); margin-bottom: .35rem; }
+    h1 { font-family: "Instrument Sans", sans-serif; font-size: 1.55rem; margin-bottom: .35rem; }
+    .hero p { color: var(--muted); margin-bottom: 1.25rem; }
+    .who {
+      display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .who label { font-size: .75rem; color: var(--muted); }
+    .who select {
+      background: #081410; border: 1px solid var(--line-soft); color: var(--txt);
+      border-radius: 999px; padding: .4rem .8rem; font: inherit;
+    }
+    .sec-head { margin: 1.25rem 0 .85rem; }
+    .sec-head h2 { font-family: "Instrument Sans", sans-serif; font-size: 1.05rem; }
+    .sec-head p { color: var(--muted); font-size: .84rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .85rem; }
+    .bullet {
+      text-align: left; border: 1px solid var(--line-soft); background: var(--card);
+      border-radius: var(--radius); padding: 1rem; color: inherit; cursor: pointer; font: inherit;
+      display: flex; flex-direction: column; gap: .7rem; min-height: 9.5rem;
+    }
+    .bullet:hover { border-color: var(--line); }
+    .bullet.locked { opacity: .5; cursor: default; }
+    .bullet-top { display: flex; justify-content: space-between; align-items: center; }
+    .bullet-ico {
+      width: 2rem; height: 2rem; border-radius: 8px; display: grid; place-items: center;
+      background: rgba(147,198,74,.18); color: var(--verde); font-weight: 800; font-size: .75rem;
+    }
+    .badge-live { font-size: .62rem; font-weight: 800; color: var(--verde); letter-spacing: .04em; }
+    .badge-soon { font-size: .62rem; font-weight: 800; color: var(--muted); }
+    .bullet h3 { font-family: "Instrument Sans", sans-serif; font-size: 1rem; }
+    .bullet-foot { display: flex; justify-content: space-between; align-items: end; gap: .5rem; margin-top: auto; }
+    .tags { display: flex; flex-wrap: wrap; gap: .25rem; }
+    .tag { font-size: .65rem; padding: .15rem .4rem; border-radius: 999px; background: rgba(255,255,255,.06); color: var(--muted); }
+    .abrir { font-size: .72rem; font-weight: 800; color: var(--verde); }
+    .empty { color: var(--muted); padding: 1rem 0; }
+    .footer-note { margin-top: 1.5rem; font-size: .78rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a class="side-brand" href="index.html" title="Accesos">
+        <div class="mark">M</div>
+        <div>
+          <strong>MOVA</strong>
+          <small>Vista redactor</small>
+        </div>
+      </a>
+      <div>
+        <div class="side-label">Mis clientes</div>
+        <nav class="side-nav" id="sideNav"></nav>
+      </div>
+      <div class="side-foot">Solo clientes asignados</div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="crumb"><a href="index.html">Accesos</a> / <b>Vista redactor</b></div>
+        <div class="top-note">No ve el trabajo de otros redactores ni clientes no asignados</div>
+      </header>
+      <div class="content">
+        <div class="hero-kicker">Acceso redactor</div>
+        <h1>Tus clientes asignados</h1>
+        <p>Elige con quién trabajas hoy. La asignación vive en config (luego Sheet / n8n).</p>
+
+        <div class="who">
+          <label for="redactorSel">Redactor</label>
+          <select id="redactorSel"></select>
+        </div>
+
+        <div class="sec-head">
+          <h2>Clientes</h2>
+          <p id="assignNote">—</p>
+        </div>
+        <div class="grid" id="bulletGrid"></div>
+        <p class="footer-note">Grupo Making OF · MOVA · Vista redactor</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="config-accesos.js"></script>
+  <script>
+    const cfg = window.MOVA_CONFIG;
+    const sel = document.getElementById("redactorSel");
+    const grid = document.getElementById("bulletGrid");
+    const sideNav = document.getElementById("sideNav");
+    const assignNote = document.getElementById("assignNote");
+    const LS = "mova-redactor-id";
+
+    cfg.redactores.forEach((r) => {
+      const o = document.createElement("option");
+      o.value = r.id; o.textContent = r.nombre;
+      sel.appendChild(o);
+    });
+    try {
+      const saved = localStorage.getItem(LS);
+      if (saved && [...sel.options].some((o) => o.value === saved)) sel.value = saved;
+    } catch (e) {}
+
+    function currentRedactor() {
+      return cfg.redactores.find((r) => r.id === sel.value) || cfg.redactores[0];
+    }
+
+    function assignedClientes() {
+      const r = currentRedactor();
+      const ids = new Set(r.clientes || []);
+      return cfg.clientes.filter((c) => ids.has(c.id));
+    }
+
+    function render() {
+      const r = currentRedactor();
+      const list = assignedClientes();
+      try { localStorage.setItem(LS, r.id); } catch (e) {}
+      assignNote.textContent = list.length
+        ? `${r.nombre}: ${list.length} cliente(s) asignado(s).`
+        : `${r.nombre}: sin clientes asignados.`;
+
+      grid.innerHTML = "";
+      sideNav.innerHTML = "";
+
+      if (!list.length) {
+        grid.innerHTML = `<div class="empty">No hay clientes para este redactor.</div>`;
+        return;
+      }
+
+      list.forEach((item) => {
+        const locked = !item.live || !(item.hrefRedactor || item.hrefEditor);
+        const el = document.createElement(locked ? "div" : "button");
+        if (!locked) el.type = "button";
+        el.className = "bullet" + (locked ? " locked" : "");
+        el.innerHTML = `
+          <div class="bullet-top">
+            <div class="bullet-ico">${item.initials}</div>
+            ${locked ? '<span class="badge-soon">PRÓXIMO</span>' : '<span class="badge-live">LIVE</span>'}
+          </div>
+          <h3>${item.name}</h3>
+          <div class="bullet-foot">
+            <div class="tags">${(item.tags || []).map((t) => `<span class="tag">${t}</span>`).join("")}</div>
+            <span class="abrir">${locked ? "PRONTO" : "ABRIR ›"}</span>
+          </div>`;
+        if (!locked) {
+          el.addEventListener("click", () => {
+            location.href = item.hrefRedactor || item.hrefEditor;
+          });
+        }
+        grid.appendChild(el);
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "side-item";
+        if (locked) btn.disabled = true;
+        btn.innerHTML = `
+          <span class="ico">${item.initials}</span>
+          <span>${item.name}</span>
+          ${!locked ? '<span class="live">LIVE</span>' : ""}`;
+        btn.addEventListener("click", () => {
+          if (!locked) location.href = item.hrefRedactor || item.hrefEditor;
+        });
+        sideNav.appendChild(btn);
+      });
+    }
+
+    sel.addEventListener("change", render);
+    render();
+  </script>
+</body>
+</html>
