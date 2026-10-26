@@ -106,7 +106,7 @@
     table.sheet td{border:1px solid rgba(255,255,255,.08);padding:.1rem;vertical-align:middle;background:#0a121c}
     table.sheet col.c-sem{width:48px} table.sheet col.c-kw{width:100px} table.sheet col.c-tipo{width:72px}
     table.sheet col.c-url{width:18%} table.sheet col.c-anc{width:13%} table.sheet col.c-iu{width:20%}
-    table.sheet col.c-pos{width:10%} table.sheet col.c-est{width:78px} table.sheet col.c-txt{width:84px}
+    table.sheet col.c-pos{width:10%} table.sheet col.c-est{width:78px} table.sheet col.c-vb{width:96px} table.sheet col.c-txt{width:84px}
     table.sheet .no-select,table.sheet .no-select *{
       -webkit-user-select:none!important;-moz-user-select:none!important;user-select:none!important;
     }
@@ -190,10 +190,28 @@
     .popup-head h2{font-size:1.25rem;font-weight:800;color:#fff;overflow-wrap:anywhere}
     .popup-head .meta-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.55rem}
     .popup-head .meta-chip{display:inline-block;padding:.2rem .55rem;border-radius:999px;background:rgba(0,0,0,.28);color:#fff;font-size:.78rem;font-weight:600}
-    .popup-head .meta-url{margin-top:.55rem;padding:.45rem .65rem;border-radius:8px;background:rgba(0,0,0,.35);color:#e8f2ff;font-size:.82rem;font-weight:600;line-height:1.4;word-break:break-all}
+    .popup-head .meta-url{display:none}
     .popup-body{padding:1.1rem 1.2rem}
-    .popup-body textarea{width:100%;min-height:520px;height:min(70vh,640px);background:#121212;border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#f2f2f2;padding:1.15rem 1.25rem;font:inherit;font-size:1rem;line-height:1.7;resize:vertical}
-    .popup-foot{display:flex;justify-content:flex-end;gap:.5rem;padding:.35rem 1.2rem 1.15rem}
+    .texto-refs{margin-bottom:.85rem;padding:.7rem .8rem;border-radius:10px;background:rgba(0,102,204,.1);border:1px solid rgba(0,102,204,.28)}
+    .texto-refs .refs-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.55rem;flex-wrap:wrap}
+    .texto-refs .refs-title{font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#9ec5f0}
+    .texto-refs .ref-row{display:flex;align-items:flex-start;gap:.55rem;padding:.4rem 0;border-top:1px solid rgba(255,255,255,.06)}
+    .texto-refs .ref-row:first-of-type{border-top:0;padding-top:0}
+    .texto-refs .ref-lab{flex:0 0 2.4rem;font-size:.68rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#8eb6e8;padding-top:.2rem}
+    .texto-refs .ref-val{flex:1;min-width:0;font-size:.84rem;font-weight:600;color:#e8f2ff;line-height:1.4;word-break:break-all;user-select:text}
+    .texto-refs .btn-mini{flex:0 0 auto;font-size:.68rem;padding:.28rem .55rem;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:#fff;cursor:pointer;font-weight:700}
+    .texto-refs .btn-mini:hover{border-color:var(--paris-b);background:rgba(0,102,204,.25)}
+    .texto-editor{width:100%;min-height:520px;height:min(70vh,640px);overflow:auto;background:#121212;border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#f2f2f2;padding:1.15rem 1.25rem;font:inherit;font-size:1rem;line-height:1.7;outline:none}
+    .texto-editor:focus{border-color:rgba(0,102,204,.55);box-shadow:0 0 0 1px rgba(0,102,204,.25)}
+    .texto-editor:empty:before{content:attr(data-placeholder);color:#6a7a8e;pointer-events:none}
+    .texto-editor h2{font-size:1.35rem;font-weight:800;color:#fff;margin:1.1rem 0 .55rem;line-height:1.3}
+    .texto-editor h2:first-child{margin-top:0}
+    .texto-editor h3{font-size:1.12rem;font-weight:700;color:#e8f2ff;margin:.95rem 0 .45rem;line-height:1.35}
+    .texto-editor h4{font-size:1rem;font-weight:700;color:#cfe4ff;margin:.8rem 0 .35rem;line-height:1.4}
+    .texto-editor p{margin:0 0 .85rem}
+    .texto-editor p:last-child{margin-bottom:0}
+    .popup-foot{display:flex;justify-content:flex-end;gap:.5rem;padding:.35rem 1.2rem 1.15rem;flex-wrap:wrap}
+    .vb-cell select{width:100%;max-width:110px;background:#081018;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:.35rem .4rem;font:inherit;font-size:.68rem;font-weight:700}
 
     .ob{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:1rem;background:rgba(2,6,12,.78);backdrop-filter:blur(6px);overflow:auto}
     .ob.open{display:flex}
@@ -215,13 +233,13 @@
         <span class="chev" aria-hidden="true">‹</span> Volver a Paris
       </a>
       <nav class="crumb-nav" aria-label="Ubicación">
-        <a href="panel-general.html">Panel general</a>
+        <a href="panel-general.html">Vista editor</a>
         <span class="crumb-sep">›</span>
         <a href="portal-paris.html">Paris</a>
         <span class="crumb-sep">›</span>
         <span class="crumb-now" id="crumbStep">1 · Revisión</span>
       </nav>
-      <a class="logo" href="panel-general.html" title="Ir al panel general"><div class="logo-mark">M</div>MOVA <span>×</span> paris.cl</a>
+      <a class="logo" href="panel-general.html" title="Ir a Vista editor"><div class="logo-mark">M</div>MOVA <span>×</span> paris.cl</a>
     </div>
     <div class="phase">
       <nav class="nav" aria-label="Secciones del portal">
@@ -283,7 +301,7 @@
     <div class="view" id="view-redaccion">
       <section class="hero">
         <h1>Portal redactor - Paris</h1>
-        <p>Pega el texto en bloque continuo. Semana viene del consolidado.</p>
+        <p>Textos por Semana 1–4 y mes. El texto se ve con forma (sin etiquetas); al copiar lleva HTML.</p>
       </section>
 
       <div class="layout">
@@ -322,11 +340,19 @@
               </select>
             </div>
             <div class="fld">
-              <label>Estado</label>
+              <label>Estado redacción</label>
               <select id="fStatus">
                 <option value="">Todas</option>
                 <option value="ok">Con VB</option>
                 <option value="pendiente">Pendientes</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label>Visto bueno editor</label>
+              <select id="fVbEditor">
+                <option value="">Todas</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="ok">OK</option>
               </select>
             </div>
             <div class="fld grow">
@@ -358,10 +384,18 @@
         <div class="meta-url" id="tUrl">—</div>
       </div>
       <div class="popup-body">
-        <textarea id="textoBody" placeholder="Pega aquí el texto completo en bloque continuo (700–800 palabras)…"></textarea>
+        <div class="texto-refs" id="tKwUrlMeta" aria-label="URL y keyword del ítem">
+          <div class="refs-head">
+            <span class="refs-title">URL y keyword</span>
+            <button type="button" class="btn-mini" id="btnCopiarRefs">Copiar todas</button>
+          </div>
+          <div id="tRefsList"></div>
+        </div>
+        <div id="textoBody" class="texto-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Escribe o pega el texto. Verás la forma (títulos y párrafos) sin etiquetas. Al copiar se llevan &lt;h2&gt;, &lt;h3&gt;, &lt;h4&gt; y &lt;p&gt;."></div>
       </div>
       <div class="popup-foot">
         <button type="button" class="btn btn-ghost" id="btnCerrarTexto">Cerrar</button>
+        <button type="button" class="btn btn-ghost" id="btnCopiarEtiquetas">Copiar con etiquetas</button>
         <button type="button" class="btn btn-primary" id="btnGuardarTexto">Guardar contenido</button>
       </div>
     </div>
@@ -376,18 +410,20 @@
     let idx = 0;
     let revisionDone = false;
 
-    // v3: zip de prueba limpio (no hereda votos/tickets de pruebas anteriores)
-    const LS_REV = "mova-paris-rev-v3";
-    const LS_ITEMS = "mova-paris-items-from-rev-v3";
+    // v4: sin «Semana revisión»; + visto bueno editor; texto HTML estructurado
+    const LS_REV = "mova-paris-rev-v4";
+    const LS_ITEMS = "mova-paris-items-from-rev-v4";
     const LS_MEL = "mova-paris-mel-email";
     const DEFAULT_MEL = "mmanzur@mkof.cl";
 
     try {
-      // Descarta restos de pruebas viejas para que la 1ª apertura del zip venga sin VB/X
+      // Descarta restos de pruebas viejas / mes artificial Semana revisión
       try {
         localStorage.removeItem("mova-paris-rev-v1");
         localStorage.removeItem("mova-paris-rev-v2");
+        localStorage.removeItem("mova-paris-rev-v3");
         localStorage.removeItem("mova-paris-items-from-rev-v1");
+        localStorage.removeItem("mova-paris-items-from-rev-v3");
       } catch (e0) {}
       const saved = JSON.parse(localStorage.getItem(LS_REV) || "null");
       if (saved && Array.isArray(saved.rows) && saved.rows.length === REV.length) {
@@ -418,24 +454,27 @@
     const mesSel = document.getElementById("mes");
     const blocksEl = document.getElementById("blocks");
     const revBody = document.getElementById("revBody");
+    const defMes = DATA.defaultMes || "Octubre 26";
 
-    // Meses del consolidado en orden (más reciente primero); Semana revisión al final
+    // Normaliza ítems: quita mes artificial y asegura VB editor
+    ITEMS.forEach(it => {
+      if (it.mes === "Semana revisión") {
+        it.mes = defMes;
+        if (!it.semana) it.semana = 1;
+      }
+      if (it.vbEditor !== "ok" && it.vbEditor !== "pendiente") it.vbEditor = "pendiente";
+    });
+
+    // Meses del consolidado en orden (más reciente primero). Solo mes real + Semana 1–4.
     const mesPrefer = ["Octubre 26","Septiembre 26","Agosto 26","Julio 26","Junio 26","Mayo 26","Abril 26","Marzo 26","Febrero 26","Enero 26"];
-    const mesSet = [...new Set(ITEMS.map(i => i.mes))];
+    const mesSet = [...new Set(ITEMS.map(i => i.mes).filter(m => m && m !== "Semana revisión"))];
     const mesOrdered = [
       ...mesPrefer.filter(m => mesSet.includes(m)),
-      ...mesSet.filter(m => !mesPrefer.includes(m) && m !== "Semana revisión"),
+      ...mesSet.filter(m => !mesPrefer.includes(m)),
     ];
     mesOrdered.forEach(m => {
       const o = document.createElement("option"); o.value = m; o.textContent = m; mesSel.appendChild(o);
     });
-    if (![...mesSel.options].some(o => o.value === "Semana revisión")) {
-      const o = document.createElement("option");
-      o.value = "Semana revisión";
-      o.textContent = "Semana revisión";
-      mesSel.appendChild(o);
-    }
-    const defMes = DATA.defaultMes || "Octubre 26";
     mesSel.value = [...mesSel.options].some(o => o.value === defMes) ? defMes : (mesSel.options[0] ? mesSel.options[0].value : "");
 
     /* ---- Nav: pasos independientes (revisión ↔ redacción) ---- */
@@ -786,10 +825,12 @@
     }
 
     function pushToRedaccion() {
-      const mesName = "Semana revisión";
+      const mesName = defMes;
+      const semSel = document.getElementById("semana").value;
+      const semana = Number(semSel) || 1;
       const nuevos = REV.map((r, i) => ({
         mes: mesName,
-        semana: 1,
+        semana: semana,
         keyword: r.keyword,
         keywordOrig: r.keyword,
         tipo: normalizeTipo(r.tipo),
@@ -798,6 +839,7 @@
         texto: "",
         listo: false,
         status: r.voto === "x" ? "pendiente" : "ok",
+        vbEditor: "pendiente",
         comentarioRev: r.comentario || "",
         fromRevision: true,
         anchors: Array.from({length:10}, () => ({a:"", u:"", p:""})),
@@ -812,6 +854,7 @@
         mesSel.insertBefore(o, mesSel.firstChild);
       }
       mesSel.value = mesName;
+      if (semSel) document.getElementById("semana").value = String(semana);
       // Por defecto solo las con VB (editables); las X quedan bloqueadas
       document.getElementById("fStatus").value = "ok";
       idx = null;
@@ -895,10 +938,12 @@
       const mes = mesSel.value;
       const sem = document.getElementById("semana").value;
       const st = document.getElementById("fStatus").value;
+      const vb = document.getElementById("fVbEditor").value;
       return ITEMS.map((it, i) => ({...it, _i:i})).filter(it => {
         if (mes && it.mes !== mes) return false;
         if (sem && String(it.semana) !== sem) return false;
         if (st && (it.status || "ok") !== st) return false;
+        if (vb && (it.vbEditor || "pendiente") !== vb) return false;
         if (q && !(it.keyword.toLowerCase().includes(q) || (it.url||"").toLowerCase().includes(q))) return false;
         return true;
       }).sort((a, b) => {
@@ -1026,6 +1071,11 @@
       const estatusPill = pend
         ? `<span class="st-pill pend">Pendiente</span>`
         : (it.listo ? `<span class="st-pill ok">Listo</span>` : `<span class="st-pill" style="background:rgba(255,255,255,.08);color:var(--muted)">En curso</span>`);
+      const vbVal = (it.vbEditor === "ok") ? "ok" : "pendiente";
+      const vbSelect = `<select data-f="vbEditor" class="vb-sel" ${dis} title="Visto bueno editor">
+            <option value="pendiente" ${vbVal==="pendiente"?"selected":""}>Pendiente</option>
+            <option value="ok" ${vbVal==="ok"?"selected":""}>OK</option>
+          </select>`;
       const lockBanner = pend ? `
         <div class="lock-banner">
           <span>Pendiente${it.comentarioRev ? ": " + esc(it.comentarioRev) : ""}</span>
@@ -1051,9 +1101,10 @@
         rows += `<td class="pos-cell${failed?" failed":""}" data-item="${i}" data-n="${n}" contenteditable="${pend?"false":"true"}" spellcheck="false">${esc(posVal)}</td>`;
         if (n === 0) {
           rows += `<td class="cell-span est-cell no-select" rowspan="10">${estatusPill}</td>`;
+          rows += `<td class="cell-span vb-cell no-select" rowspan="10" style="text-align:center;vertical-align:middle">${vbSelect}</td>`;
           rows += `<td class="cell-span no-select" rowspan="10" style="text-align:center">
             <div style="font-size:.65rem;color:var(--muted);margin-bottom:.35rem" data-texto-flag>${textoLabel}</div>
-            <button type="button" class="btn btn-ghost" data-act="texto" style="width:100%;margin-bottom:.3rem" ${dis}>texto</button>
+            <button type="button" class="btn btn-ghost" data-act="texto" style="width:100%;margin-bottom:.35rem" ${dis}>texto</button>
             <button type="button" class="btn btn-ok" data-act="listo" style="width:100%" ${dis}>listo</button>
           </td>`;
         }
@@ -1070,12 +1121,12 @@
         <table class="sheet excel">
           <colgroup>
             <col class="c-sem" /><col class="c-kw" /><col class="c-tipo" /><col class="c-url" />
-            <col class="c-anc" /><col class="c-iu" /><col class="c-pos" /><col class="c-est" /><col class="c-txt" />
+            <col class="c-anc" /><col class="c-iu" /><col class="c-pos" /><col class="c-est" /><col class="c-vb" /><col class="c-txt" />
           </colgroup>
           <thead>
             <tr>
               <th>Semana</th><th>Keyword</th><th>Tipo</th><th>Url</th>
-              <th class="col-selectable" data-col-sel="anc" title="Clic: seleccionar todos los anchors">Anchor</th><th class="col-selectable" data-col-sel="url" title="Clic: seleccionar todas las URLs">URLs interlinking</th><th>Posición</th><th class="no-select">Estatus</th><th class="no-select">Texto</th>
+              <th class="col-selectable" data-col-sel="anc" title="Clic: seleccionar todos los anchors">Anchor</th><th class="col-selectable" data-col-sel="url" title="Clic: seleccionar todas las URLs">URLs interlinking</th><th>Posición</th><th class="no-select">Estatus</th><th class="no-select">VB editor</th><th class="no-select">Texto</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -1200,8 +1251,62 @@
         if (btnTexto) btnTexto.addEventListener("click", e => { e.stopPropagation(); setActive(i); openTexto(); });
         if (btnListo) btnListo.addEventListener("click", e => { e.stopPropagation(); setActive(i); markListo(); });
         if (btnMel) btnMel.addEventListener("click", e => { e.stopPropagation(); unlockMel(i); });
+        const vbEl = block.querySelector("[data-f=vbEditor]");
+        if (vbEl) vbEl.addEventListener("change", e => {
+          e.stopPropagation();
+          ITEMS[i].vbEditor = vbEl.value === "ok" ? "ok" : "pendiente";
+          persistItemsFromRev();
+        });
       });
       syncTextoHead();
+    }
+
+    function itemRefPairs(it) {
+      const pairs = [];
+      const kw = (it && it.keyword || "").trim();
+      const url = (it && it.url || "").trim();
+      if (kw || url) pairs.push({ kw: kw || "—", url: url || "—" });
+      return pairs;
+    }
+
+    function renderTextoRefs() {
+      const box = document.getElementById("tRefsList");
+      if (!box) return;
+      if (idx == null || !ITEMS[idx]) { box.innerHTML = ""; return; }
+      const pairs = itemRefPairs(ITEMS[idx]);
+      if (!pairs.length) {
+        box.innerHTML = `<div class="ref-row"><span class="ref-val">Sin URL / keyword</span></div>`;
+        return;
+      }
+      box.innerHTML = pairs.map((p, n) => `
+        <div class="ref-row" data-ref="${n}">
+          <span class="ref-lab">KW</span>
+          <span class="ref-val" data-copy="kw">${esc(p.kw)}</span>
+          <button type="button" class="btn-mini" data-copy-btn="kw" data-ref="${n}">Copiar</button>
+        </div>
+        <div class="ref-row" data-ref="${n}">
+          <span class="ref-lab">URL</span>
+          <span class="ref-val" data-copy="url">${esc(p.url)}</span>
+          <button type="button" class="btn-mini" data-copy-btn="url" data-ref="${n}">Copiar</button>
+        </div>`).join("");
+      box.querySelectorAll("[data-copy-btn]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const n = Number(btn.getAttribute("data-ref")) || 0;
+          const kind = btn.getAttribute("data-copy-btn");
+          const pair = itemRefPairs(ITEMS[idx])[n];
+          if (!pair) return;
+          const val = kind === "kw" ? pair.kw : pair.url;
+          copyText(val, (kind === "kw" ? "Keyword" : "URL") + " copiada");
+        });
+      });
+    }
+
+    function copyAllRefs() {
+      if (idx == null || !ITEMS[idx]) return;
+      const pairs = itemRefPairs(ITEMS[idx]);
+      if (!pairs.length) { alert("No hay URL / keyword para copiar."); return; }
+      const text = pairs.map(p => p.kw + "\n" + p.url).join("\n\n");
+      copyText(text, pairs.length > 1 ? (pairs.length + " pares copiados") : "KW + URL copiadas");
     }
 
     function syncTextoHead() {
@@ -1212,11 +1317,95 @@
         <span class="meta-chip">Semana ${it.semana||1}</span>
         <span class="meta-chip">${it.mes||""}</span>
         <span class="meta-chip">${it.tipo||""}</span>
-        ${it.status==="pendiente"?'<span class="meta-chip">Pendiente</span>':""}`;
+        ${it.status==="pendiente"?'<span class="meta-chip">Pendiente</span>':""}
+        <span class="meta-chip">VB editor: ${it.vbEditor==="ok"?"OK":"Pendiente"}</span>`;
       document.getElementById("tUrl").textContent = it.url || "—";
+      renderTextoRefs();
       const root = blockRoot(idx);
       const f = root && root.querySelector("[data-texto-flag]");
       if (f) f.textContent = (it.texto||"").trim() ? "Texto cargado" : "Sin texto";
+    }
+
+    function escText(s) {
+      return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    function looksLikeHtml(s) {
+      return /<\s*(h[1-6]|p|div|article|section|br)\b/i.test(String(s || ""));
+    }
+
+    function normalizeTextoHtml(input) {
+      const raw = String(input || "").trim();
+      if (!raw) return "";
+      const holder = document.createElement("div");
+      if (looksLikeHtml(raw)) holder.innerHTML = raw;
+      else {
+        const parts = raw.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split(/\n\s*\n/);
+        const blocks = (parts.length > 1 ? parts : raw.split("\n")).map(x => x.trim()).filter(Boolean);
+        holder.innerHTML = blocks.map(b => "<p>" + escText(b) + "</p>").join("");
+      }
+      const out = [];
+      const pushBlock = (tag, node) => {
+        const tmp = document.createElement("div");
+        // solo texto + negrita/cursiva/enlaces simples
+        tmp.textContent = "";
+        const walkInline = (n, dest) => {
+          if (n.nodeType === 3) { dest.appendChild(document.createTextNode(n.textContent)); return; }
+          if (n.nodeType !== 1) return;
+          const t = n.tagName;
+          if (t === "BR") { dest.appendChild(document.createElement("br")); return; }
+          if (t === "STRONG" || t === "B" || t === "EM" || t === "I" || t === "A") {
+            const el = document.createElement(t === "B" ? "strong" : t === "I" ? "em" : t.toLowerCase());
+            if (t === "A" && n.getAttribute("href")) el.setAttribute("href", n.getAttribute("href"));
+            [...n.childNodes].forEach(c => walkInline(c, el));
+            dest.appendChild(el);
+            return;
+          }
+          [...n.childNodes].forEach(c => walkInline(c, dest));
+        };
+        [...node.childNodes].forEach(c => walkInline(c, tmp));
+        const inner = tmp.innerHTML.replace(/\s+/g, " ").trim();
+        if (!inner) return;
+        out.push("<" + tag + ">" + tmp.innerHTML.trim() + "</" + tag + ">");
+      };
+      const visit = (node) => {
+        if (node.nodeType === 3) {
+          const t = node.textContent.replace(/\s+/g, " ").trim();
+          if (t) out.push("<p>" + escText(t) + "</p>");
+          return;
+        }
+        if (node.nodeType !== 1) return;
+        const tag = node.tagName;
+        if (tag === "H2") return pushBlock("h2", node);
+        if (tag === "H3") return pushBlock("h3", node);
+        if (tag === "H4") return pushBlock("h4", node);
+        if (tag === "H1") return pushBlock("h2", node);
+        if (tag === "H5" || tag === "H6") return pushBlock("h4", node);
+        if (tag === "P") return pushBlock("p", node);
+        if (tag === "BR") return;
+        // div/article/section/li/etc → hijos o párrafo
+        if (!node.children.length) return pushBlock("p", node);
+        [...node.childNodes].forEach(visit);
+      };
+      [...holder.childNodes].forEach(visit);
+      return out.join("\n");
+    }
+
+    function setTextoEditorHtml(html) {
+      const ed = document.getElementById("textoBody");
+      const norm = normalizeTextoHtml(html);
+      ed.innerHTML = norm || "";
+    }
+
+    function getTextoEditorHtml() {
+      const ed = document.getElementById("textoBody");
+      return normalizeTextoHtml(ed.innerHTML);
+    }
+
+    function copyTextoConEtiquetas() {
+      const html = getTextoEditorHtml();
+      if (!html) { alert("No hay texto para copiar."); return; }
+      copyText(html, "Texto copiado con etiquetas");
     }
 
 
@@ -1370,7 +1559,7 @@
       }
       readSheetToItem();
       syncTextoHead();
-      document.getElementById("textoBody").value = ITEMS[idx].texto || "";
+      setTextoEditorHtml(ITEMS[idx].texto || "");
       document.getElementById("bdTexto").classList.add("open");
       document.getElementById("textoBody").focus();
     }
@@ -1378,15 +1567,62 @@
 
     document.getElementById("btnCerrarTexto").addEventListener("click", closeTexto);
     document.getElementById("bdTexto").addEventListener("click", e => { if (e.target.id==="bdTexto") closeTexto(); });
+    document.getElementById("btnCopiarEtiquetas").addEventListener("click", copyTextoConEtiquetas);
+    document.getElementById("btnCopiarRefs").addEventListener("click", copyAllRefs);
+
+    const textoBodyEl = document.getElementById("textoBody");
+    textoBodyEl.addEventListener("blur", () => {
+      textoBodyEl.innerHTML = normalizeTextoHtml(textoBodyEl.innerHTML);
+    });
+    textoBodyEl.addEventListener("paste", e => {
+      e.preventDefault();
+      const cd = e.clipboardData || window.clipboardData;
+      const html = cd && cd.getData("text/html");
+      const plain = cd && cd.getData("text/plain");
+      const source = (html && looksLikeHtml(html)) ? html : (plain || "");
+      const norm = normalizeTextoHtml(source);
+      if (!norm) return;
+      // Si el editor está vacío, reemplaza; si no, inserta al final de la selección
+      const ed = textoBodyEl;
+      if (!String(ed.innerHTML || "").replace(/<br\s*\/?>/gi,"").trim()) {
+        ed.innerHTML = norm;
+      } else {
+        document.execCommand("insertHTML", false, norm);
+        ed.innerHTML = normalizeTextoHtml(ed.innerHTML);
+      }
+    });
+    textoBodyEl.addEventListener("copy", e => {
+      const html = getTextoEditorHtml();
+      if (!html) return;
+      e.preventDefault();
+      e.clipboardData.setData("text/plain", html);
+      e.clipboardData.setData("text/html", html);
+    });
+    textoBodyEl.addEventListener("cut", e => {
+      const html = getTextoEditorHtml();
+      if (!html) return;
+      e.preventDefault();
+      e.clipboardData.setData("text/plain", html);
+      e.clipboardData.setData("text/html", html);
+      // corta la selección visual → limpia selección
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount && textoBodyEl.contains(sel.anchorNode)) {
+        sel.deleteFromDocument();
+        textoBodyEl.innerHTML = normalizeTextoHtml(textoBodyEl.innerHTML);
+      }
+    });
 
     document.getElementById("btnGuardarTexto").addEventListener("click", () => {
-      const body = document.getElementById("textoBody").value.trim();
+      const body = getTextoEditorHtml();
       if (!body) { alert("Pega o escribe el texto."); return; }
-      if (idx != null) ITEMS[idx].texto = body;
+      if (idx != null) {
+        ITEMS[idx].texto = body;
+        persistItemsFromRev();
+      }
       closeTexto();
       renderBlocks();
       const s = document.getElementById("status");
-      s.textContent = "Texto guardado.";
+      s.textContent = "Texto guardado (HTML estructurado).";
       s.classList.add("show");
     });
 
@@ -1411,6 +1647,7 @@
     document.getElementById("htipo").addEventListener("change", renderHist);
     document.getElementById("q").addEventListener("input", renderBlocks);
     document.getElementById("fStatus").addEventListener("change", () => { idx = null; renderBlocks(); });
+    document.getElementById("fVbEditor").addEventListener("change", () => { idx = null; renderBlocks(); });
     mesSel.addEventListener("change", () => { idx = null; renderBlocks(); });
     document.getElementById("semana").addEventListener("change", () => { idx = null; renderBlocks(); });
 

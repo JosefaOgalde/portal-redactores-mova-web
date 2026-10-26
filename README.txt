@@ -1,2 +1,1 @@
-﻿Una vez que descomprimes esta carpeta, debes ingresar al portal de redactores abriendo panel-general.html.
-
+Abre panel-general.html para entrar a Vista editor. Desde ahí eliges el cliente (Paris).
