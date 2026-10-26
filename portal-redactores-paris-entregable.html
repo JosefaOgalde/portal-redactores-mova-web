@@ -45,7 +45,11 @@
   color:inherit; cursor:pointer; font:inherit; transition:border-color .2s, transform .15s, background .2s;
 }
 .ms-card:not(.locked):hover { border-color:var(--line); background:#122820; transform:translateY(-2px); }
-.ms-card.locked { opacity:.55; cursor:default; }
+.ms-card.locked {
+  opacity:.48; cursor:not-allowed; pointer-events:none;
+  filter:grayscale(.25);
+}
+.ms-card.locked .foot .soon { color:var(--muted); }
 .ms-card .ico {
   width:2.2rem; height:2.2rem; border-radius:8px; display:grid; place-items:center;
   background:rgba(147,198,74,.18); color:var(--verde); font-family:"Instrument Sans",sans-serif; font-weight:700; font-size:.85rem;
@@ -387,9 +391,9 @@ body.mova-in-shell { background:#091914; }
         <div><strong>MOVA</strong><small>Grupo Making OF · Portal Redactores</small></div>
       </div>
       <h1>Elige tu acceso</h1>
-      <p class="ms-lead">No entras directo a Paris. Primero eliges rol: editor, redactor o cliente.</p>
+      <p class="ms-lead">Entras como redactora. Editor y cliente no están disponibles en este acceso.</p>
       <div class="ms-grid" id="msRoleGrid"></div>
-      <div class="ms-note">Para probar como redactora: entra a <b>Vista redactor</b> — sesión de <b>Adria</b> con Paris asignado.</div>
+      <div class="ms-note">Tu acceso: <b>Vista redactor</b> · sesión <b>Adria</b> · cliente Paris. Las otras puertas están bloqueadas.</div>
     </div>
   </section>
 
@@ -2104,7 +2108,7 @@ body.mova-in-shell { background:#091914; }
     empresa: "Grupo Making OF",
     producto: "MOVA · Portal Redactores",
     roles: {
-      editor: { id: "editor", label: "Vista editor", desc: "Ve el trabajo de todos los redactores y todos los clientes." },
+      editor: { id: "editor", label: "Vista editor", desc: "Solo para el equipo editor. No disponible en este acceso de redactora.", soon: true },
       redactor: { id: "redactor", label: "Vista redactor", desc: "Solo los clientes asignados a esa redactora." },
       cliente: { id: "cliente", label: "Vista cliente", desc: "Pendiente. Se define después.", soon: true }
     },
@@ -2165,9 +2169,8 @@ body.mova-in-shell { background:#091914; }
   }
 
   function goEditor() {
-    saveSession({ rol: "editor", nombre: "Editor", redactorId: null });
-    renderEditor();
-    showShell("editor");
+    // Bloqueado en paquete redactora
+    goAccesos();
   }
 
   function openParis() {
@@ -2192,12 +2195,13 @@ body.mova-in-shell { background:#091914; }
         <div class="ico">${icos[key]}</div>
         <h2>${r.label}</h2>
         <p>${r.desc}</p>
-        <div class="foot"><span>${key}</span><span class="${locked ? "soon" : "go"}">${locked ? "Pronto" : "Entrar ›"}</span></div>`;
-      if (!locked) {
-        el.addEventListener("click", () => {
-          if (key === "redactor") goRedactor(true);
-          else if (key === "editor") goEditor();
-        });
+        <div class="foot"><span>${key}</span><span class="${locked || key !== "redactor" ? "soon" : "go"}">${key === "redactor" && !locked ? "Entrar ›" : "Sin acceso"}</span></div>`;
+      if (!locked && key === "redactor") {
+        el.addEventListener("click", () => goRedactor(true));
+      } else {
+        el.classList.add("locked");
+        el.disabled = true;
+        el.setAttribute("aria-disabled", "true");
       }
       grid.appendChild(el);
     });
@@ -2303,14 +2307,14 @@ body.mova-in-shell { background:#091914; }
   renderRoles();
   const boot = loadSession();
   document.body.classList.add("mova-in-shell");
+  // Paquete redactora: nunca abrir editor/cliente; solo redactor o pantalla de acceso
   if (boot && boot.rol === "editor") {
-    renderEditor();
-    showShell("editor");
+    try { localStorage.removeItem(LS); } catch (e) {}
+    goAccesos();
   } else if (boot && boot.rol === "redactor") {
     renderRedactor();
     showShell("redactor");
   } else {
-    // Default demo path awareness: still start at accesos so user "entra como Adria"
     goAccesos();
   }
 })();
