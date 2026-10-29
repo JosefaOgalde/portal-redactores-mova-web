@@ -1,0 +1,2605 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MOVA · Portal Redactores</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+
+/* ===== Shell accesos / redactor / editor (cPanel 1 HTML) ===== */
+#mova-shell-root, #mova-shell-root * { box-sizing: border-box; }
+#mova-shell-root {
+  --petroleo:#091914; --petroleo2:#133429; --verde:#93C64A; --celeste:#99EADA;
+  --txt:#FDFBF7; --muted:rgba(253,251,247,.62); --line:rgba(147,198,74,.28);
+  --line-soft:rgba(253,251,247,.08); --card:#0e1f19; --radius:16px;
+  font-family:"Lato",sans-serif; color:var(--txt); min-height:100vh;
+  background:var(--petroleo);
+}
+#mova-shell-root::before {
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(ellipse 65% 45% at 12% -8%, rgba(147,198,74,.14), transparent 55%),
+    radial-gradient(ellipse 45% 40% at 92% 18%, rgba(153,234,218,.08), transparent 50%),
+    linear-gradient(180deg, var(--petroleo) 0%, var(--petroleo2) 48%, var(--petroleo) 100%);
+}
+.mova-shell-view { display:none; position:relative; z-index:1; min-height:100vh; }
+.mova-shell-view.active { display:block; }
+.ms-wrap { max-width:920px; margin:0 auto; padding:2.5rem 1.25rem 3rem; }
+.ms-brand { display:flex; align-items:center; gap:.75rem; margin-bottom:2rem; }
+.ms-mark {
+  width:2.4rem; height:2.4rem; border-radius:10px; display:grid; place-items:center;
+  background:var(--verde); color:var(--petroleo); font-family:"Instrument Sans",sans-serif; font-weight:700;
+}
+.ms-brand strong { font-family:"Instrument Sans",sans-serif; font-size:1.15rem; display:block; }
+.ms-brand small { color:var(--muted); font-size:.8rem; }
+.ms-wrap h1 { font-family:"Instrument Sans",sans-serif; font-size:clamp(1.6rem,3vw,2.1rem); font-weight:700; margin-bottom:.45rem; }
+.ms-lead { color:var(--muted); max-width:36rem; line-height:1.5; margin-bottom:1.75rem; }
+.ms-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
+@media (max-width:800px){ .ms-grid { grid-template-columns:1fr; } }
+.ms-card {
+  display:flex; flex-direction:column; gap:.7rem; text-align:left; border:1px solid var(--line-soft);
+  background:var(--card); border-radius:var(--radius); padding:1.15rem 1.1rem 1.2rem; min-height:11.5rem;
+  color:inherit; cursor:pointer; font:inherit; transition:border-color .2s, transform .15s, background .2s;
+}
+.ms-card:not(.locked):hover { border-color:var(--line); background:#122820; transform:translateY(-2px); }
+.ms-card.locked {
+  opacity:.48; cursor:not-allowed; pointer-events:none;
+  filter:grayscale(.25);
+}
+.ms-card.locked .foot .soon { color:var(--muted); }
+.ms-card .ico {
+  width:2.2rem; height:2.2rem; border-radius:8px; display:grid; place-items:center;
+  background:rgba(147,198,74,.18); color:var(--verde); font-family:"Instrument Sans",sans-serif; font-weight:700; font-size:.85rem;
+}
+.ms-card h2 { font-family:"Instrument Sans",sans-serif; font-size:1.05rem; font-weight:700; }
+.ms-card p { color:var(--muted); font-size:.86rem; line-height:1.45; flex:1; }
+.ms-card .foot { display:flex; justify-content:space-between; align-items:center; font-size:.75rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+.ms-card .foot .go { color:var(--verde); }
+.ms-card .foot .soon { color:var(--muted); }
+.ms-note { margin-top:1.5rem; padding:.9rem 1rem; border:1px solid var(--line-soft); border-radius:12px; color:var(--muted); font-size:.84rem; line-height:1.45; }
+.ms-app { display:flex; width:100%; min-height:100vh; }
+.ms-side {
+  width:220px; flex-shrink:0; border-right:1px solid var(--line-soft); background:rgba(9,25,20,.88);
+  padding:1.25rem .9rem; display:flex; flex-direction:column; gap:1.25rem;
+}
+.ms-side-brand { display:flex; align-items:center; gap:.65rem; color:inherit; text-decoration:none; cursor:pointer; background:none; border:0; font:inherit; padding:0; }
+.ms-side-label { font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:.45rem; }
+.ms-side-item {
+  width:100%; text-align:left; border:0; background:transparent; color:var(--txt);
+  display:flex; align-items:center; gap:.5rem; padding:.55rem .45rem; border-radius:10px; font:inherit; cursor:pointer;
+}
+.ms-side-item:hover { background:rgba(147,198,74,.12); }
+.ms-side-item .ico {
+  width:1.7rem; height:1.7rem; border-radius:7px; display:grid; place-items:center;
+  background:rgba(147,198,74,.18); color:var(--verde); font-size:.65rem; font-weight:800;
+}
+.ms-side-item .live { margin-left:auto; font-size:.62rem; font-weight:800; color:var(--verde); }
+.ms-side-foot { margin-top:auto; font-size:.72rem; color:var(--muted); }
+.ms-main { flex:1; min-width:0; }
+.ms-topbar {
+  display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap;
+  padding:1rem 1.5rem; border-bottom:1px solid var(--line-soft);
+}
+.ms-crumb { font-size:.85rem; color:var(--muted); }
+.ms-crumb b { color:var(--txt); }
+.ms-crumb button {
+  background:none; border:0; color:var(--celeste); font:inherit; cursor:pointer; padding:0;
+}
+.ms-content { padding:1.5rem; }
+.ms-kicker { font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--verde); margin-bottom:.35rem; }
+.ms-content h1 { font-family:"Instrument Sans",sans-serif; font-size:1.55rem; margin-bottom:.35rem; }
+.ms-content > p { color:var(--muted); margin-bottom:1.25rem; }
+.ms-who { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; margin-bottom:1.25rem; }
+.ms-who label { font-size:.75rem; color:var(--muted); }
+.ms-who select, .ms-who .pill {
+  background:#081410; border:1px solid var(--line-soft); color:var(--txt);
+  border-radius:999px; padding:.4rem .8rem; font:inherit;
+}
+.ms-who .pill { display:inline-flex; align-items:center; gap:.4rem; }
+.ms-who .pill strong { color:var(--verde); font-weight:700; }
+.ms-sec { margin:1.25rem 0 .85rem; }
+.ms-sec h2 { font-family:"Instrument Sans",sans-serif; font-size:1.05rem; }
+.ms-sec p { color:var(--muted); font-size:.84rem; }
+.ms-bullets { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:.85rem; }
+.ms-bullet {
+  text-align:left; border:1px solid var(--line-soft); background:var(--card);
+  border-radius:var(--radius); padding:1rem; color:inherit; cursor:pointer; font:inherit;
+  display:flex; flex-direction:column; gap:.7rem; min-height:9.5rem;
+}
+.ms-bullet:hover { border-color:var(--line); }
+.ms-bullet-top { display:flex; justify-content:space-between; align-items:center; }
+.ms-bullet-ico {
+  width:2rem; height:2rem; border-radius:8px; display:grid; place-items:center;
+  background:rgba(147,198,74,.18); color:var(--verde); font-weight:800; font-size:.75rem;
+}
+.ms-badge-live { font-size:.62rem; font-weight:800; color:var(--verde); letter-spacing:.04em; }
+.ms-bullet h3 { font-family:"Instrument Sans",sans-serif; font-size:1rem; }
+.ms-bullet-foot { display:flex; justify-content:space-between; align-items:end; gap:.5rem; margin-top:auto; }
+.ms-tag { font-size:.65rem; padding:.15rem .4rem; border-radius:999px; background:rgba(255,255,255,.06); color:var(--muted); margin-right:.25rem; }
+.ms-abrir { font-size:.72rem; font-weight:800; color:var(--verde); }
+.ms-who-bar {
+  position:sticky; top:0; z-index:40;
+  display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap;
+  padding:.55rem 1rem; background:rgba(9,25,20,.92); border-bottom:1px solid rgba(147,198,74,.28);
+  font-family:"Lato",sans-serif; font-size:.82rem; color:rgba(253,251,247,.75);
+}
+.ms-who-bar b { color:#93C64A; }
+.ms-who-bar button {
+  border:1px solid rgba(147,198,74,.35); background:rgba(147,198,74,.12); color:#FDFBF7;
+  border-radius:999px; padding:.35rem .75rem; font:inherit; cursor:pointer; font-size:.75rem; font-weight:700;
+}
+body.mova-in-shell #mova-paris-root { display:none; }
+body.mova-in-paris #mova-shell-root { display:none; }
+body.mova-in-paris #mova-paris-root { display:block; }
+body.mova-in-shell { background:#091914; }
+
+.ms-side-item.on{background:rgba(147,198,74,.16)}
+.ms-hub-lead{color:var(--muted);max-width:40rem;margin-bottom:1.25rem;line-height:1.5}
+.ms-paris{color:#8eb6e8}
+.ms-paris-hero h1{font-size:clamp(1.6rem,3vw,2.2rem)}
+.ms-ops{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem;margin-top:1.5rem}
+.ms-op{text-align:left;border:1px solid var(--line-soft);background:var(--card);border-radius:14px;padding:1rem;color:inherit;cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:.35rem}
+.ms-op:hover{border-color:var(--line)}
+.ms-op span{font-family:"Instrument Sans",sans-serif;font-weight:700}
+.ms-op small{color:var(--muted);font-size:.75rem}
+.ms-op.locked{opacity:.45;cursor:not-allowed}
+.ms-badge-live{font-size:.62rem;font-weight:800;color:var(--verde);letter-spacing:.04em}
+
+
+
+    :root {
+      --bg:#070b12; --bg2:#0c1420;
+      --paris:#0066cc; --paris-b:#1a7ae8; --paris-d:#003d7a;
+      --glow:rgba(0,102,204,.4); --ok:#2bb673; --warn:#d4a017; --bad:#e85d5d;
+      --text:#f4f7fb; --muted:#9aa8bc;
+      --line:rgba(255,255,255,.08); --kw:#0057b8;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Manrope,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.75rem;flex-wrap:wrap}
+    .logo{display:inline-flex;align-items:center;gap:.65rem;font-weight:700;font-size:1.05rem;color:inherit;text-decoration:none}
+    .logo:hover{color:#cfe4ff}
+    .logo-mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--paris-b),var(--paris-d));display:grid;place-items:center;font-size:.7rem;font-weight:800;box-shadow:0 0 16px var(--glow)}
+    .logo span{opacity:.55;font-weight:500;margin:0 .15rem}
+    .crumb-nav{display:inline-flex;align-items:center;gap:.35rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)}
+    .crumb-nav a{color:#9cc7ff;text-decoration:none;font-weight:700}
+    .crumb-nav a:hover{color:#fff;text-decoration:underline;text-underline-offset:3px}
+    .crumb-nav .crumb-sep{opacity:.45;user-select:none}
+    .crumb-nav .crumb-now{color:var(--text);font-weight:800}
+    .btn-back{display:inline-flex;align-items:center;gap:.4rem;border:1px solid rgba(0,102,204,.45);background:rgba(0,102,204,.16);color:#dff0ff;font:inherit;font-size:.78rem;font-weight:800;padding:.5rem .95rem;border-radius:10px;text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+    .btn-back:hover{background:rgba(0,102,204,.28);border-color:rgba(0,102,204,.75);color:#fff}
+    .btn-back .chev{font-size:1rem;line-height:1}
+    .phase{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
+    .nav{display:flex;gap:.3rem;background:rgba(255,255,255,.04);padding:.25rem;border-radius:999px;border:1px solid var(--line)}
+    .nav button{border:0;background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:.5rem .95rem;border-radius:999px;cursor:pointer}
+    .nav button.active{background:var(--paris);color:#fff;box-shadow:0 0 18px var(--glow)}
+    .nav button:disabled{opacity:.4;cursor:not-allowed}
+    .phase-help{border:0;background:transparent;color:var(--muted);font:inherit;font-size:.8rem;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+    .phase-help:hover{color:#cfe4ff}
+    .page{width:min(1400px,calc(100% - 2.4rem));margin:0 auto 2rem;flex:1}
+    .view{display:none}
+    .view.active{display:block}
+    .hero{position:relative;overflow:hidden;border-radius:18px;padding:1.35rem 1.6rem;background:linear-gradient(105deg,#06101f 0%,#0a2344 42%,var(--paris) 100%);border:1px solid rgba(255,255,255,.06)}
+    .hero::after{content:"PARIS";position:absolute;right:-.05em;top:50%;transform:translateY(-50%);font-size:clamp(3.5rem,10vw,6.5rem);font-weight:800;letter-spacing:-.04em;color:rgba(255,255,255,.07);pointer-events:none;line-height:1}
+    .hero h1{font-size:clamp(1.25rem,2.8vw,1.75rem);font-weight:800;letter-spacing:-.03em;position:relative;z-index:1}
+    .hero p{margin-top:.45rem;max-width:48rem;color:rgba(255,255,255,.88);font-size:.86rem;line-height:1.5;position:relative;z-index:1}
+    .layout{display:grid;grid-template-columns:168px minmax(0,1fr);gap:.75rem;margin-top:1rem}
+    @media(max-width:980px){.layout{grid-template-columns:1fr}}
+    .panel{background:var(--bg2);border:1px solid var(--line);border-radius:14px;overflow:hidden;min-height:420px;display:flex;flex-direction:column}
+    .panel-h{padding:.7rem .8rem;border-bottom:1px solid var(--line);background:rgba(0,102,204,.12);font-weight:800;font-size:.82rem;color:#cfe4ff}
+    .panel-h small{display:block;font-weight:500;color:var(--muted);font-size:.68rem;margin-top:.2rem}
+    .tools{display:flex;flex-wrap:wrap;gap:.4rem;padding:.65rem;border-bottom:1px solid var(--line);align-items:flex-end}
+    .tools .fld{display:flex;flex-direction:column;gap:.2rem;min-width:0}
+    .tools .fld label{font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8eb6e8}
+    .tools .fld.grow{flex:1;min-width:140px}
+    .tools input,.tools select{background:#081018;border:1px solid var(--line);color:var(--text);border-radius:999px;padding:.45rem .65rem;font:inherit;font-size:.8rem;outline:none;width:100%}
+    .tools input:focus,.tools select:focus{border-color:var(--paris)}
+    .btn{border:0;border-radius:999px;padding:.45rem .85rem;font:inherit;font-weight:700;font-size:.78rem;cursor:pointer}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .btn-primary{background:var(--paris);color:#fff;box-shadow:0 0 16px var(--glow)}
+    .btn-ok{background:var(--ok);color:#fff}
+    .btn-ghost{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.18)}
+    .scroll{scrollbar-width:thin;scrollbar-color:rgba(0,102,204,.55) transparent}
+    .scroll::-webkit-scrollbar{width:5px;height:5px}
+    .scroll::-webkit-scrollbar-track{background:transparent}
+    .scroll::-webkit-scrollbar-thumb{background:rgba(0,102,204,.45);border-radius:999px}
+    .scroll::-webkit-scrollbar-button{display:none;width:0;height:0}
+    .hist{flex:1;max-height:68vh;overflow:auto}
+    .hist-item{width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);padding:.55rem .55rem;font:inherit;cursor:pointer}
+    .hist-item:hover{background:rgba(0,102,204,.14)}
+    .hist-item .kw{font-weight:700;font-size:.72rem}
+    .hist-item .meta{margin-top:.2rem;color:var(--muted);font-size:.62rem;word-break:break-all}
+    .badge{display:inline-block;margin-top:.25rem;padding:.1rem .35rem;border-radius:999px;background:rgba(0,102,204,.22);color:#9cc7ff;font-size:.58rem;font-weight:700}
+    .badge.warn{background:rgba(212,160,23,.22);color:#f0d48a}
+    .empty{padding:1.6rem .7rem;text-align:center;color:var(--muted);line-height:1.45;font-size:.75rem}
+    .sheet-wrap{flex:1;overflow:auto;padding:.65rem}
+    .sheet-actions{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;justify-content:space-between;margin-bottom:.55rem}
+    .sheet-actions .left,.sheet-actions .right{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}
+    .toast{font-size:.72rem;color:#7de0b0;font-weight:600;opacity:0;transition:opacity .2s}
+    .toast.show{opacity:1}
+    .block{margin-bottom:.65rem;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+    .block.active{border-color:rgba(0,102,204,.55);box-shadow:0 0 0 1px rgba(0,102,204,.25)}
+    .block-bar{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;justify-content:space-between;padding:.35rem .55rem;background:rgba(0,102,204,.1);border-bottom:1px solid var(--line)}
+    .block-bar .title{font-size:.72rem;font-weight:700}
+    table.sheet.excel{border-collapse:collapse}
+    table.sheet.excel thead th{position:sticky;top:0;z-index:3}
+    table.sheet .anc-cell,table.sheet .url-cell{
+      user-select:none;-webkit-user-select:none;-moz-user-select:none;cursor:cell;
+      padding:.22rem .3rem;color:var(--text);font-size:.62rem;line-height:1.35;
+      min-height:1.4rem;outline:none;word-break:break-all;white-space:pre-wrap;
+    }
+    table.sheet .pos-cell{
+      user-select:none;-webkit-user-select:none;-moz-user-select:none;cursor:text;
+      padding:.22rem .3rem;color:var(--text);font-size:.62rem;line-height:1.35;
+      min-height:1.4rem;outline:none;word-break:break-all;white-space:pre-wrap;
+    }
+    table.sheet .pos-cell:focus,table.sheet .anc-cell:focus,table.sheet .url-cell:focus{box-shadow:inset 0 0 0 1px var(--paris);background:#0c1a2a}
+    table.sheet .pos-cell.failed{color:#ff8f8f;font-weight:700}
+    table.sheet th.col-selectable{cursor:pointer}
+    table.sheet th.col-selectable:hover{background:rgba(0,102,204,.45)}
+    table.sheet .anc-cell.col-hi,table.sheet .url-cell.col-hi{background:rgba(0,102,204,.35);outline:1px solid rgba(90,170,255,.65)}
+    table.sheet .anc-cell.pair-hi,table.sheet .url-cell.pair-hi{background:rgba(0,102,204,.35)}
+    #blocks.sel-dragging{cursor:cell}
+    #blocks.sel-dragging .anc-cell,#blocks.sel-dragging .url-cell{cursor:cell}
+    .pos-select-hint{font-size:.68rem;color:var(--muted);max-width:22rem;line-height:1.35}
+    .sem{display:inline-flex;align-items:center;justify-content:center;min-width:2.8rem;padding:.12rem .4rem;border-radius:6px;font-size:.65rem;font-weight:800}
+    .sem-1{background:rgba(0,102,204,.28);color:#9cc7ff;border:1px solid rgba(0,102,204,.55)}
+    .sem-2{background:rgba(16,185,129,.22);color:#6eecc0;border:1px solid rgba(16,185,129,.5)}
+    .sem-3{background:rgba(245,158,11,.22);color:#ffd48a;border:1px solid rgba(245,158,11,.5)}
+    .sem-4{background:rgba(236,72,153,.22);color:#ffb3d7;border:1px solid rgba(236,72,153,.45)}
+    .sem-5{background:rgba(139,92,246,.22);color:#d4c1ff;border:1px solid rgba(139,92,246,.45)}
+    table.sheet{width:100%;border-collapse:collapse;font-size:.62rem;min-width:900px;table-layout:fixed}
+    table.sheet th{text-align:left;background:rgba(0,102,204,.28);color:#dff0ff;padding:.28rem .3rem;font-size:.52rem;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;border:1px solid rgba(255,255,255,.08)}
+    table.sheet td{border:1px solid rgba(255,255,255,.08);padding:.1rem;vertical-align:middle;background:#0a121c}
+    table.sheet col.c-sem{width:48px} table.sheet col.c-kw{width:100px} table.sheet col.c-tipo{width:72px}
+    table.sheet col.c-url{width:18%} table.sheet col.c-anc{width:13%} table.sheet col.c-iu{width:20%}
+    table.sheet col.c-pos{width:10%} table.sheet col.c-est{width:78px} table.sheet col.c-vb{width:96px} table.sheet col.c-txt{width:84px}
+    table.sheet .no-select,table.sheet .no-select *{
+      -webkit-user-select:none!important;-moz-user-select:none!important;user-select:none!important;
+    }
+    table.sheet .est-cell{text-align:center;vertical-align:middle}
+    table.sheet .est-cell .st-pill{pointer-events:none}
+    /* Revisión: autofit real en # / Año / Tipo (el resto absorbe el ancho) */
+    #revTable.sheet{
+      table-layout:auto!important;
+      width:max-content!important;
+      max-width:100%;
+      min-width:100%;
+    }
+    #revTable col.c-rev-n,
+    #revTable col.c-rev-anio,
+    #revTable col.c-rev-tipo,
+    #revTable col.c-rev-voto{width:auto}
+    #revTable col.c-rev-kw{width:auto}
+    #revTable col.c-rev-url{width:auto}
+    #revTable col.c-rev-com{width:auto}
+    #revTable th:nth-child(1),#revTable td:nth-child(1),
+    #revTable th:nth-child(2),#revTable td:nth-child(2),
+    #revTable th:nth-child(3),#revTable td:nth-child(3),
+    #revTable th:nth-child(6),#revTable td:nth-child(6){
+      width:1px!important;
+      white-space:nowrap!important;
+      text-align:center;
+      padding:.35rem .45rem!important;
+      vertical-align:middle;
+    }
+    #revTable th:nth-child(4),#revTable td:nth-child(4){min-width:180px}
+    #revTable th:nth-child(5),#revTable td:nth-child(5){min-width:220px}
+    #revTable th:nth-child(7),#revTable td:nth-child(7){min-width:140px}
+    #revTable .rev-kw,#revTable .rev-url{display:block;white-space:normal;overflow-wrap:anywhere;word-break:break-word;line-height:1.4;padding:.35rem .4rem;font-size:.72rem;cursor:text}
+    #revTable .rev-kw{color:#fff;font-weight:800}
+    #revTable .rev-url{color:#cfe4ff;font-weight:600}
+    #revTable .rev-kw:hover,#revTable .rev-url:hover{outline:1px dashed rgba(255,255,255,.25);border-radius:4px}
+    #revTable .rev-edit{width:100%;min-height:2.2em;background:#081018;border:1px solid var(--paris);border-radius:4px;color:var(--text);padding:.35rem .4rem;font:inherit;font-size:.72rem;line-height:1.4;resize:vertical}
+    #revTable .cell-kw .rev-edit{background:rgba(0,0,0,.25);color:#fff;font-weight:800}
+    #revTable tr.row-x-miss td{box-shadow:inset 0 0 0 1px rgba(232,93,93,.45)}
+    #revTable tr.row-x-miss textarea[data-com]{border-color:var(--bad)!important;background:rgba(232,93,93,.08)}
+    .rev-footer .need-com{font-size:.78rem;color:#ffb0b0;font-weight:600;margin-right:auto}
+    table.sheet input,table.sheet select,table.sheet textarea{width:100%;background:#081018;border:1px solid transparent;border-radius:4px;color:var(--text);padding:.22rem .3rem;font:inherit;font-size:.62rem;line-height:1.35}
+    table.sheet textarea{min-height:36px;resize:vertical}
+    table.sheet input:focus,table.sheet select:focus,table.sheet textarea:focus{outline:none;border-color:var(--paris)}
+    table.sheet .cell-kw{background:var(--kw)!important}
+    table.sheet .cell-kw input{background:transparent;color:#fff;font-weight:800}
+    table.sheet .cell-span{background:#0d1826}
+    table.sheet .flash{animation:flash .9s ease}
+    @keyframes flash{0%,100%{box-shadow:none}40%{box-shadow:inset 0 0 0 2px #7de0b0}}
+    .status{margin:.75rem;padding:.7rem .9rem;border-radius:8px;background:rgba(43,182,115,.15);color:#7de0b0;font-size:.88rem;font-weight:600;display:none}
+    .status.show{display:block}
+    .status.warn{background:rgba(212,160,23,.15);color:#f0d48a}
+    footer{text-align:center;padding:1.2rem;color:#5d6b7d;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase}
+
+    .rev-actions{display:flex;flex-wrap:wrap;gap:.55rem;align-items:center;justify-content:space-between;margin-bottom:.85rem}
+    .rev-actions .hint{color:var(--muted);font-size:.82rem;line-height:1.4;max-width:40rem}
+    .voto{display:flex;gap:.35rem;justify-content:center}
+    .voto button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:#081018;color:var(--muted);font-weight:800;font-size:.95rem;cursor:pointer}
+    .voto button.on-vb{background:rgba(43,182,115,.22);border-color:var(--ok);color:#7de0b0}
+    .voto button.on-x{background:rgba(232,93,93,.2);border-color:var(--bad);color:#ffb0b0}
+    tr.row-vb td{background:#0b1814}
+    tr.row-x td{background:#1a1012}
+    tr.row-pendiente .cell-kw{outline:2px solid var(--warn)}
+    .block.locked{border-color:rgba(212,160,23,.45)}
+    .block.locked .sheet input:disabled,.block.locked .sheet select:disabled{opacity:.7}
+    .lock-banner{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;justify-content:space-between;padding:.55rem .7rem;background:rgba(212,160,23,.14);border-bottom:1px solid rgba(212,160,23,.35);color:#f0d48a;font-size:.78rem;font-weight:600;line-height:1.4}
+    .rev-footer{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;justify-content:flex-end;padding:1rem .85rem 1.15rem;border-top:1px solid var(--line);background:rgba(0,102,204,.08)}
+    .rev-footer .mail-box{margin-left:auto}
+    .rev-footer .btn{padding:.55rem 1.25rem;font-size:.9rem}
+    .mail-box{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap}
+    .mail-box input{min-width:220px;background:#081018;border:1px solid var(--line);color:var(--text);border-radius:999px;padding:.5rem .85rem;font:inherit}
+    .st-pill{display:inline-block;padding:.15rem .5rem;border-radius:999px;font-size:.68rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+    .st-pill.ok{background:rgba(43,182,115,.2);color:#7de0b0}
+    .st-pill.pend{background:rgba(212,160,23,.2);color:#f0d48a}
+
+    .backdrop{position:fixed;inset:0;background:rgba(2,6,12,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:1rem;z-index:50}
+    .backdrop.open{display:flex}
+    .popup{width:min(920px,100%);max-height:94vh;overflow:auto;background:#0a0a0a;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+    .popup-head{padding:1.05rem 1.2rem;background:linear-gradient(100deg,var(--paris-d),var(--paris))}
+    .popup-head .eyebrow{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;opacity:.85;margin-bottom:.3rem}
+    .popup-head h2{font-size:1.25rem;font-weight:800;color:#fff;overflow-wrap:anywhere}
+    .popup-head .meta-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.55rem}
+    .popup-head .meta-chip{display:inline-block;padding:.2rem .55rem;border-radius:999px;background:rgba(0,0,0,.28);color:#fff;font-size:.78rem;font-weight:600}
+    .popup-head .meta-url{display:none}
+    .popup-body{padding:1.1rem 1.2rem}
+    .texto-refs{margin-bottom:.85rem;padding:.7rem .8rem;border-radius:10px;background:rgba(0,102,204,.1);border:1px solid rgba(0,102,204,.28)}
+    .texto-refs .refs-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.55rem;flex-wrap:wrap}
+    .texto-refs .refs-title{font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#9ec5f0}
+    .texto-refs .refs-tools{display:flex;gap:.35rem;align-items:center;flex-wrap:wrap}
+    .texto-refs .ref-main{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
+    @media (max-width:720px){.texto-refs .ref-main{grid-template-columns:1fr}}
+    .texto-refs .ref-col{display:flex;flex-direction:column;gap:.35rem;min-width:0;padding:.45rem .55rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.06)}
+    .texto-refs .ref-col-top{display:flex;align-items:center;justify-content:space-between;gap:.4rem}
+    .texto-refs .ref-lab{font-size:.68rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#8eb6e8}
+    .texto-refs .ref-val{font-size:.84rem;font-weight:600;color:#e8f2ff;line-height:1.4;word-break:break-all;user-select:text}
+    .texto-refs .refs-week{margin-top:.7rem;padding-top:.55rem;border-top:1px solid rgba(255,255,255,.08)}
+    .texto-refs .refs-week-title{font-size:.65rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#7a93b0;margin-bottom:.4rem}
+    .texto-refs .refs-week-list{display:flex;flex-direction:column;gap:.28rem;max-height:9.5rem;overflow:auto}
+    .texto-refs .week-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) auto;gap:.4rem;align-items:start;padding:.28rem .35rem;border-radius:6px;background:rgba(0,0,0,.22)}
+    .texto-refs .week-row .wk{font-size:.68rem;font-weight:700;color:#d7e7ff;word-break:break-word}
+    .texto-refs .week-row .wu{font-size:.62rem;color:#9aa8bc;word-break:break-all}
+    .texto-refs .btn-mini{flex:0 0 auto;font-size:.68rem;padding:.28rem .55rem;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:#fff;cursor:pointer;font-weight:700}
+    .texto-refs .btn-mini:hover{border-color:var(--paris-b);background:rgba(0,102,204,.25)}
+    .texto-theme-bar{display:flex;justify-content:flex-end;margin:0 0 .45rem}
+    .btn-theme{width:2.1rem;height:2.1rem;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:#fff;cursor:pointer;font-size:1rem;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+    .btn-theme:hover{border-color:var(--paris-b);background:rgba(0,102,204,.25)}
+    .texto-editor{width:100%;min-height:520px;height:min(70vh,640px);overflow:auto;background:#121212;border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#f2f2f2;padding:1.15rem 1.25rem;font:inherit;font-size:1rem;line-height:1.7;outline:none}
+    .texto-editor:focus{border-color:rgba(0,102,204,.55);box-shadow:0 0 0 1px rgba(0,102,204,.25)}
+    .texto-editor:empty:before{content:attr(data-placeholder);color:#6a7a8e;pointer-events:none}
+    .texto-editor h2{font-size:1.35rem;font-weight:800;color:#fff;margin:1.1rem 0 .55rem;line-height:1.3}
+    .texto-editor h2:first-child{margin-top:0}
+    .texto-editor h3{font-size:1.12rem;font-weight:700;color:#e8f2ff;margin:.95rem 0 .45rem;line-height:1.35}
+    .texto-editor h4{font-size:1rem;font-weight:700;color:#cfe4ff;margin:.8rem 0 .35rem;line-height:1.4}
+    .texto-editor p{margin:0 0 .85rem}
+    .texto-editor p:last-child{margin-bottom:0}
+    .texto-editor.theme-light{background:#f7f8fa;color:#121820;border-color:#d5dbe6}
+    .texto-editor.theme-light:empty:before{color:#8a94a3}
+    .texto-editor.theme-light h2,.texto-editor.theme-light h3,.texto-editor.theme-light h4{color:#0d1520}
+    .texto-editor.theme-light:focus{border-color:#0066cc;box-shadow:0 0 0 1px rgba(0,102,204,.25)}
+    .popup-foot{display:flex;justify-content:flex-end;gap:.5rem;padding:.35rem 1.2rem 1.15rem;flex-wrap:wrap}
+    .vb-cell select{width:100%;max-width:110px;background:#081018;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:.35rem .4rem;font:inherit;font-size:.68rem;font-weight:700}
+
+    .ob{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:1rem;background:rgba(2,6,12,.78);backdrop-filter:blur(6px);overflow:auto}
+    .ob.open{display:flex}
+    .ob-card{width:100%;max-width:400px;min-width:0;box-sizing:border-box;overflow:hidden;background:#0d1522;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:1.35rem 1.25rem 1.15rem;box-shadow:0 28px 70px rgba(0,0,0,.55)}
+    .ob-steps{display:flex;gap:.35rem;margin-bottom:1rem}
+    .ob-steps span{height:4px;flex:1;min-width:0;border-radius:999px;background:rgba(255,255,255,.12)}
+    .ob-steps span.on{background:var(--paris)}
+    .ob-kicker{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8eb6e8;margin-bottom:.4rem}
+    .ob-card h2{font-size:1.2rem;font-weight:800;margin-bottom:.55rem;overflow-wrap:anywhere}
+    .ob-card p{color:var(--muted);font-size:.9rem;line-height:1.55;overflow-wrap:anywhere}
+    .ob-foot{display:flex;justify-content:space-between;gap:.5rem;margin-top:1.2rem;flex-wrap:wrap}
+    .ob-foot .left{display:flex;gap:.4rem;flex-wrap:wrap}
+  
+
+/* ===== Google Sign-In gate ===== */
+body.mv-lock #mova-shell-root,
+body.mv-lock #mova-paris-root{visibility:hidden!important;pointer-events:none!important}
+#mvGate{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 84% 14%,rgba(110,170,150,.55) 0,rgba(110,170,150,0) 42%),radial-gradient(circle at 8% 96%,rgba(112,150,60,.55) 0,rgba(112,150,60,0) 40%),linear-gradient(150deg,#1E4436 0%,#122B22 100%)}
+#mvGate.off{display:none!important;visibility:hidden!important;pointer-events:none!important}
+.mv-card{width:100%;max-width:520px;background:#F2F1EC;border-radius:28px;padding:44px 40px 48px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.mv-logo{font:600 11px "Instrument Sans",sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#2A5A49;margin-bottom:10px}
+.mv-t{font:800 clamp(1.6rem,3vw,2rem)/1.1 "Instrument Sans",sans-serif;color:#091914;margin-bottom:.45rem}
+.mv-t span{color:#56742A}
+.mv-sub{color:#5C7468;font-size:.92rem;line-height:1.45;margin:0 auto 1.35rem;max-width:28rem}
+#mvBtn{min-height:44px;display:flex;align-items:center;justify-content:center}
+.mv-local{display:block;margin:14px auto 0;background:transparent;border:1px solid rgba(9,25,20,.18);border-radius:999px;padding:11px 22px;color:#2A5A49;font:600 12px "Instrument Sans",sans-serif;letter-spacing:.03em;text-transform:uppercase;cursor:pointer}
+.mv-local:hover{background:rgba(9,25,20,.05)}
+.mv-msg{margin-top:18px;font-size:13px;line-height:1.55;padding:12px 14px;border-radius:14px;display:none;text-align:left}
+.mv-msg.on{display:block}
+.mv-msg.err{background:#FBEBD2;border:1px solid rgba(168,101,15,.25);color:#7A4A0C}
+.mv-msg.load{background:#EAF2EE;border:1px solid rgba(9,25,20,.09);color:#2A5A49}
+.mv-audit{margin-top:1.1rem;font:600 10px "Instrument Sans",sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#5C7468}
+.ms-userchip{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;color:var(--muted)}
+.ms-userchip b{color:var(--verde)}
+.ms-salir{border:1px solid var(--line-soft);background:transparent;color:var(--muted);border-radius:999px;padding:.3rem .7rem;font:inherit;font-size:.72rem;font-weight:700;cursor:pointer}
+.ms-salir:hover{color:var(--txt);border-color:var(--line)}
+
+  </style>
+</head>
+<body class="mova-in-shell mv-lock">
+
+<div id="mvGate" role="dialog" aria-modal="true" aria-label="Acceso restringido">
+  <div class="mv-card">
+    <div class="mv-logo">Grupo Making OF · Portal de marketing · Paris</div>
+    <div class="mv-t">Acceso <span>restringido</span></div>
+    <div class="mv-sub">Ingresa con tu cuenta corporativa. El acceso está habilitado solo para usuarios autorizados por Grupo Making OF.</div>
+    <div id="mvBtn"></div>
+    <div class="mv-msg" id="mvMsg"></div>
+    <div class="mv-audit">MOVA · Acceso auditado</div>
+  </div>
+</div>
+
+
+<div id="mova-shell-root">
+  <!-- HUB CLIENTES (post Google) -->
+  <section class="mova-shell-view active" id="view-hub" data-view="hub">
+    <div class="ms-app">
+      <aside class="ms-side">
+        <div class="ms-side-brand" style="cursor:default">
+          <div class="ms-mark">M</div>
+          <div><strong>MOVA</strong><small>Grupo Making OF</small></div>
+        </div>
+        <div>
+          <div class="ms-side-label">Portales de cliente</div>
+          <nav id="msSideNav"></nav>
+        </div>
+        <div class="ms-side-foot">
+          <div class="ms-userchip">Sesión · <b data-ms-user></b></div>
+          <button type="button" class="ms-salir" data-mova-nav="salir" style="margin-top:.45rem">Salir</button>
+        </div>
+      </aside>
+      <div class="ms-main">
+        <header class="ms-topbar">
+          <div class="ms-crumb"><b>MOVA</b> / Clientes</div>
+        </header>
+        <div class="ms-content">
+          <div class="ms-kicker">Plataforma de clientes</div>
+          <h1>Un portal por marca, una sola operación</h1>
+          <p class="ms-hub-lead">Cada cliente tiene su espacio de SEO y contenidos. Elige una marca para abrir su portal.</p>
+          <div class="ms-sec">
+            <h2>Portales de cliente</h2>
+            <p id="msAssignNote">—</p>
+          </div>
+          <div class="ms-bullets" id="msBulletGrid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARIS INICIO (landing del cliente) -->
+  <section class="mova-shell-view" id="view-paris-home" data-view="paris-home">
+    <div class="ms-app">
+      <aside class="ms-side">
+        <button type="button" class="ms-side-brand" data-mova-nav="hub">
+          <div class="ms-mark">M</div>
+          <div><strong>MOVA</strong><small>Portal Paris</small></div>
+        </button>
+        <div>
+          <div class="ms-side-label">Menú</div>
+          <nav>
+            <button type="button" class="ms-side-item on" data-mova-nav="paris-home"><span class="ico">IN</span><span>Inicio</span></button>
+            <button type="button" class="ms-side-item" data-mova-nav="contenidos"><span class="ico">CO</span><span>Contenidos</span></button>
+          </nav>
+        </div>
+        <div class="ms-side-foot">
+          <div class="ms-userchip"><b data-ms-user></b></div>
+          <button type="button" class="ms-salir" data-mova-nav="salir" style="margin-top:.45rem">Salir</button>
+        </div>
+      </aside>
+      <div class="ms-main">
+        <header class="ms-topbar">
+          <div class="ms-crumb"><button type="button" data-mova-nav="hub">← Volver a clientes</button> / <b>MOVA / Clientes / Paris</b></div>
+        </header>
+        <div class="ms-content ms-paris-hero">
+          <div class="ms-kicker">Portal cliente / MOVA / Paris</div>
+          <h1>Bienvenido al portal Cliente: <span class="ms-paris">Paris</span></h1>
+          <p>El espacio donde vive la operación de SEO y contenidos de Paris. Piezas, keywords, revisión e implementación, en un mismo lugar.</p>
+          <div class="ms-ops">
+            <button type="button" class="ms-op" data-mova-nav="revision"><span>Keywords</span><small>Paso 1 · Revisión</small></button>
+            <button type="button" class="ms-op" data-mova-nav="contenidos"><span>Contenidos</span><small>Paso 2 · Redacción</small></button>
+            <button type="button" class="ms-op locked" disabled><span>SEO</span><small>Próximo</small></button>
+            <button type="button" class="ms-op locked" disabled><span>Implementación</span><small>Próximo</small></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- placeholders kept for JS ids used earlier -->
+  <select id="msRedactorSel" hidden></select>
+  <span id="msWhoName" hidden></span>
+  <div id="view-accesos" data-view="accesos" hidden></div>
+  <div id="view-redactor" data-view="redactor" hidden></div>
+  <div id="view-editor" data-view="editor" hidden></div>
+  <div id="msRoleGrid" hidden></div>
+  <div id="msEditorGrid" hidden></div>
+  <div id="msEditorSide" hidden></div>
+</div>
+
+<div id="mova-paris-root">
+
+<div class="ms-who-bar" id="msWhoBar">
+  <div>Entraste como <b id="msParisWho">—</b> · <span id="msParisRol">Redactora</span> · cliente <b>Paris</b></div>
+  <button type="button" id="msBackShell">Volver al inicio Paris</button>
+</div>
+
+
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:.85rem;flex-wrap:wrap">
+      <a class="btn-back" href="#paris-home" data-mova-nav="paris-home" title="Volver al inicio Paris">
+        <span class="chev" aria-hidden="true">‹</span> Volver al inicio
+      </a>
+      <nav class="crumb-nav" aria-label="Ubicación">
+        <a href="#shell-accesos" data-mova-nav="accesos" id="crumbRole">Accesos</a>
+        <span class="crumb-sep">›</span>
+        <a href="#shell-redactor" data-mova-nav="shell">Paris</a>
+        <span class="crumb-sep">›</span>
+        <span class="crumb-now" id="crumbStep">1 · Revisión</span>
+      </nav>
+      <a class="logo" href="#shell-accesos" data-mova-nav="accesos" title="Cambiar acceso"><div class="logo-mark">M</div>MOVA <span>×</span> paris.cl</a>
+    </div>
+    <div class="phase">
+      <nav class="nav" aria-label="Secciones del portal">
+        <button type="button" class="active" data-view="revision">1 · Revisión</button>
+        <button type="button" data-view="redaccion" id="navRedaccion">2 · Redacción</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <!-- ========== PASO 1: REVISIÓN ========== -->
+    <div class="view active" id="view-revision">
+      <section class="hero">
+        <h1>Revisión de keywords</h1>
+        <p>Revisa una a una (VB o X). Keyword y URL editables. Puedes marcar las 40 de una. Al terminar: listo.</p>
+      </section>
+
+      <div class="panel" style="margin-top:1rem;min-height:auto">
+        <div class="panel-h">Keywords de la semana</div>
+        <div class="sheet-wrap scroll">
+          <table class="sheet" id="revTable">
+            <colgroup>
+              <col class="c-rev-n" />
+              <col class="c-rev-anio" />
+              <col class="c-rev-tipo" />
+              <col class="c-rev-kw" />
+              <col class="c-rev-url" />
+              <col class="c-rev-voto" />
+              <col class="c-rev-com" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Año</th>
+                <th>Tipo</th>
+                <th>Keyword</th>
+                <th>URL</th>
+                <th>VB / X</th>
+                <th>Comentarios</th>
+              </tr>
+            </thead>
+            <tbody id="revBody"></tbody>
+          </table>
+        </div>
+        <div class="rev-footer">
+          <span class="need-com" id="needComHint" hidden>Faltan comentarios</span>
+          <div class="mail-box">
+            <button type="button" class="btn btn-ghost" id="btnAllVb" title="Marca VB en las 40">Marcar las 40 ✓</button>
+            <button type="button" class="btn btn-ghost" id="btnClearVotes" title="Quita VB/X de todas">Limpiar votos</button>
+            <input id="melEmail" type="email" value="mmanzur@mkof.cl" placeholder="Correo de Mel…" autocomplete="email" />
+            <button type="button" class="btn btn-ok" id="btnListoRev" disabled>listo</button>
+          </div>
+        </div>
+        <div class="status" id="statusRev"></div>
+      </div>
+    </div>
+
+    <!-- ========== PASO 2: REDACCIÓN ========== -->
+    <div class="view" id="view-redaccion">
+      <section class="hero">
+        <h1>Portal redactor - Paris</h1>
+        <p>Textos por Semana 1–4 y mes. El texto se ve con forma (sin etiquetas); al copiar lleva HTML.</p>
+      </section>
+
+      <div class="layout">
+        <aside class="panel">
+          <div class="panel-h">Histórico · URLs trabajadas</div>
+          <div class="tools">
+            <div class="fld grow">
+              <label>Buscar</label>
+              <input id="hq" type="search" placeholder="Keyword o URL…" autocomplete="off" />
+            </div>
+            <div class="fld">
+              <label>Tipo</label>
+              <select id="htipo">
+                <option value="">Todos</option>
+                <option>PLP</option><option>Filtro</option><option>Lista</option>
+                <option>Listas</option><option>Blog</option><option>Landing</option>
+              </select>
+            </div>
+          </div>
+          <div class="hist scroll" id="hist"></div>
+        </aside>
+
+        <section class="panel">
+          <div class="panel-h">Textos Paris</div>
+          <div class="tools">
+            <div class="fld">
+              <label>Mes</label>
+              <select id="mes"></select>
+            </div>
+            <div class="fld">
+              <label>Semana</label>
+              <select id="semana">
+                <option value="">Todas</option>
+                <option value="1">Semana 1</option><option value="2">Semana 2</option>
+                <option value="3">Semana 3</option><option value="4">Semana 4</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label>Estado redacción</label>
+              <select id="fStatus">
+                <option value="">Todas</option>
+                <option value="ok">Con VB</option>
+                <option value="pendiente">Pendientes</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label>Visto bueno editor</label>
+              <select id="fVbEditor">
+                <option value="">Todas</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="ok">OK</option>
+              </select>
+            </div>
+            <div class="fld grow">
+              <label>Buscar</label>
+              <input id="q" type="search" placeholder="Keyword o URL…" />
+            </div>
+          </div>
+
+          <div class="sheet-wrap scroll">
+            <div class="sheet-actions">
+              <div class="left">
+                <span class="toast" id="toast"></span><span style="font-size:.68rem;color:var(--muted);margin-left:.5rem">Arrastra Anchor+URL (varias semanas) · solo esas columnas · Ctrl/Cmd+C o «Copiar selección» · doble clic para editar</span>
+              </div>
+              <div class="right">
+                <button type="button" class="btn btn-ghost" id="btnCopiarSelPairs">Copiar selección Anchor+URL</button>
+              </div>
+            </div>
+            <div id="blocks"></div>
+          </div>
+          <div class="status" id="status"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer>Grupo Making Of · MOVA · Portal Redactores · Paris.cl</footer>
+
+  <div class="backdrop" id="bdTexto" role="dialog" aria-modal="true">
+    <div class="popup scroll" onclick="event.stopPropagation()">
+      <div class="popup-head">
+        <h2 id="tTitle">Nombre</h2>
+        <div class="meta-row" id="tMetaRow"></div>
+        <div class="meta-url" id="tUrl">—</div>
+      </div>
+      <div class="popup-body">
+        <div class="texto-refs" id="tKwUrlMeta" aria-label="URL y keyword del ítem">
+          <div class="refs-head">
+            <span class="refs-title">URL y keyword</span>
+            <div class="refs-tools">
+              <button type="button" class="btn-mini" id="btnCopiarRefs">Copiar todas</button>
+            </div>
+          </div>
+          <div id="tRefsList"></div>
+        </div>
+        <div class="texto-theme-bar">
+          <button type="button" class="btn-theme" id="btnTemaTexto" title="Cambiar fondo del texto (luna = oscuro, sol = claro)" aria-label="Cambiar tema del texto">🌙</button>
+        </div>
+        <div id="textoBody" class="texto-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Escribe o pega el texto. Verás la forma (títulos y párrafos) sin etiquetas. Al copiar se llevan &lt;h2&gt;, &lt;h3&gt;, &lt;h4&gt; y &lt;p&gt;."></div>
+      </div>
+      <div class="popup-foot">
+        <button type="button" class="btn btn-ghost" id="btnCerrarTexto">Cerrar</button>
+        <button type="button" class="btn btn-ghost" id="btnCopiarEtiquetas">Copiar con etiquetas</button>
+        <button type="button" class="btn btn-primary" id="btnGuardarTexto">Guardar contenido</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    const DATA = {"historico":[{"anio":2026,"tipo":"Listas","keyword":"9pm night out","url":"https://www.paris.cl/listas/9pm-night-out/"},{"anio":2026,"tipo":"Filtro","keyword":"abrigo hombre","url":"https://www.paris.cl/hombre/moda/abrigos/"},{"anio":2026,"tipo":"Listas","keyword":"abrigo negro","url":"https://www.paris.cl/listas/abrigo-negro/"},{"anio":2026,"tipo":"Listas","keyword":"abrigo negro mujer","url":"https://www.paris.cl/listas/abrigo-negro-mujer/"},{"anio":2026,"tipo":"Filtro","keyword":"abrigo niña","url":"https://www.paris.cl/ninos/moda/abrigos/nina/"},{"anio":2026,"tipo":"Filtro","keyword":"abrigos mujer","url":"https://www.paris.cl/mujer/moda/abrigos/"},{"anio":2026,"tipo":"PLP","keyword":"Accesorios para gatos","url":"https://www.paris.cl/mascotas/gatos/accesorios/"},{"anio":2026,"tipo":"PLP","keyword":"accesorios para perro","url":"https://www.paris.cl/mascotas/perros/accesorios/"},{"anio":2026,"tipo":"PLP","keyword":"accesorios parrilla","url":"https://www.paris.cl/decohogar/menaje-cocina/accesorios-parrilla/"},{"anio":2026,"tipo":"Listas","keyword":"aceite de labios","url":"https://www.paris.cl/listas/aceite-de-labios/"},{"anio":2026,"tipo":"PLP","keyword":"aceites para el pelo / serums capilares","url":"https://www.paris.cl/belleza/cuidado-capilar/aceites-serums-y-finalizadores/"},{"anio":2026,"tipo":"Listas","keyword":"acer nitro","url":"https://www.paris.cl/listas/notebook-acer-nitro/"},{"anio":2026,"tipo":"Listas","keyword":"acido glicolico","url":"https://www.paris.cl/listas/acido-glicolico/"},{"anio":2026,"tipo":"Listas","keyword":"acido salicilico","url":"https://www.paris.cl/listas/acido-salicilico/"},{"anio":2026,"tipo":"Listas","keyword":"adidas barreda","url":"https://www.paris.cl/listas/adidas-barreda/"},{"anio":2026,"tipo":"Listas","keyword":"adidas breaknet","url":"https://www.paris.cl/listas/adidas-breaknet/"},{"anio":2026,"tipo":"Listas","keyword":"adidas dropset","url":"https://www.paris.cl/listas/adidas-dropset/"},{"anio":2026,"tipo":"Listas","keyword":"adidas eclyptix","url":"https://www.paris.cl/listas/adidas-eclyptix/"},{"anio":2026,"tipo":"Listas","keyword":"adidas floatnova","url":"https://www.paris.cl/listas/adidas-floatnova/"},{"anio":2026,"tipo":"Listas","keyword":"adidas forum","url":"https://www.paris.cl/listas/adidas-forum/"},{"anio":2026,"tipo":"Listas","keyword":"adidas galaxy","url":"https://www.paris.cl/listas/adidas-galaxy/"},{"anio":2026,"tipo":"Listas","keyword":"adidas grand court alpha","url":"https://www.paris.cl/listas/adidas-grand-court-alpha/"},{"anio":2026,"tipo":"Filtro","keyword":"adidas hombre","url":"https://www.paris.cl/hombre/adidas/"},{"anio":2026,"tipo":"Listas","keyword":"adidas lightblaze","url":"https://www.paris.cl/listas/adidas-lightblaze/"},{"anio":2026,"tipo":"Filtro","keyword":"adidas mujer","url":"https://www.paris.cl/mujer/adidas/"},{"anio":2026,"tipo":"PLP","keyword":"adidas originals","url":"https://www.paris.cl/zapatos/marcas-zapatillas-deportivas/adidas-originals/"},{"anio":2026,"tipo":"Listas","keyword":"adidas polerones","url":"https://www.paris.cl/listas/adidas-polerones/"},{"anio":2026,"tipo":"Listas","keyword":"adidas run 60s","url":"https://www.paris.cl/listas/adidas-run-60s/"},{"anio":2026,"tipo":"Listas","keyword":"adidas runblaze","url":"https://www.paris.cl/listas/adidas-runblaze/"},{"anio":2026,"tipo":"Listas","keyword":"adidas Runfalcon","url":"https://www.paris.cl/listas/adidas-runfalcon/"},{"anio":2026,"tipo":"Listas","keyword":"adidas runvista","url":"https://www.paris.cl/listas/adidas-runvista/"},{"anio":2026,"tipo":"Listas","keyword":"adidas samba mujer","url":"https://www.paris.cl/listas/adidas-samba-mujer/"},{"anio":2026,"tipo":"Listas","keyword":"adidas sl 72","url":"https://www.paris.cl/listas/adidas-sl-72/"},{"anio":2026,"tipo":"Listas","keyword":"adidas switch","url":"https://www.paris.cl/listas/adidas-switch/"},{"anio":2026,"tipo":"Listas","keyword":"adidas terrex mujer","url":"https://www.paris.cl/listas/adidas-terrex-mujer/"},{"anio":2026,"tipo":"Listas","keyword":"adidas ultimashow","url":"https://www.paris.cl/listas/adidas-ultimashow/"},{"anio":2026,"tipo":"Listas","keyword":"adidas ultra energy","url":"https://www.paris.cl/listas/adidas-ultra-energy/"},{"anio":2026,"tipo":"Lista","keyword":"adornos halloween","url":"https://www.paris.cl/listas/adornos-de-halloween/"},{"anio":2026,"tipo":"PLP","keyword":"Aire acondicionado","url":"https://www.paris.c/linea-blanca/climatizacion/aires-acondicionado/"},{"anio":2026,"tipo":"Lista","keyword":"aire acondicionado 9000 btu","url":"https://www.paris.cl/listas/aire-acondicionado-9000-btu/"},{"anio":2026,"tipo":"Filtro","keyword":"Aire Acondicionado Kendal","url":"https://www.paris.cl/linea-blanca/climatizacion/aires-acondicionado/kendal/"},{"anio":2026,"tipo":"Filtro","keyword":"aire acondicionado lg","url":"https://www.paris.cl/linea-blanca/climatizacion/aires-acondicionado/lg/"},{"anio":2026,"tipo":"Listas","keyword":"airpods 5","url":"https://www.paris.cl/listas/airpods-5/"},{"anio":2026,"tipo":"Lista","keyword":"airtag","url":"https://www.paris.cl/listas/airtag/"},{"anio":2026,"tipo":"Listas","keyword":"album mundial 2026","url":"https://www.paris.cl/listas/album-mundial-2026/"},{"anio":2026,"tipo":"PLP","keyword":"alfombra","url":"https://www.paris.cl/decohogar/alfombras/"},{"anio":2026,"tipo":"Listas","keyword":"alfombra de cocina","url":"https://www.paris.cl/decohogar/alfombras/alfombras-de-cocina/"},{"anio":2026,"tipo":"Lista","keyword":"alfombra gamer","url":"https://www.paris.cl/listas/alfombra-gamer/"},{"anio":2026,"tipo":"Lista","keyword":"Alfombra Shaggy","url":"https://www.paris.cl/listas/alfombra-shaggy/"},{"anio":2026,"tipo":"PLP","keyword":"alfombras grandes","url":"https://www.paris.cl/decohogar/alfombras/grandes/"}],"contenidos":[{"mes":"Octubre 26","semana":1,"ord":1,"keyword":"Vopero","tipo":"PLP","url":"https://www.paris.cl/moda-circular/marcas-destacadas/vopero/","texto":"Contenido SEO para «Vopero» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"kimonos","u":"https://www.paris.cl/mujer/moda/kimonos/","p":"5.0"},{"a":"faldas","u":"https://www.paris.cl/mujer/moda/faldas/","p":"Not Ranked (Top 10)."},{"a":"jardineras","u":"https://www.paris.cl/mujer/moda/jardineras/","p":"Not Ranked (Top 30)."},{"a":"vestidos y faldas","u":"https://www.paris.cl/mujer/moda/vestidos-faldas/","p":"4.0"},{"a":"vestido para primavera","u":"https://www.paris.cl/listas/vestido-para-primavera/","p":"5 (Ad: 2)"},{"a":"jeans mujer","u":"https://www.paris.cl/mujer/moda/jeans/","p":"15.0"},{"a":"jeans tiro bajo","u":"https://www.paris.cl/listas/jeans-tiro-bajo/","p":"8.0"},{"a":"pantys","u":"https://www.paris.cl/listas/pantys/","p":"Not Ranked (Top 20)."},{"a":"ropa mujer / moda mujer","u":"https://www.paris.cl/mujer/moda/","p":"7.0"},{"a":"abrigos mujer","u":"https://www.paris.cl/mujer/moda/abrigos/","p":"(Ad: 4)"}]},{"mes":"Octubre 26","semana":1,"ord":2,"keyword":"retinol","tipo":"Lista","url":"https://www.paris.cl/listas/retinol/","texto":"Contenido SEO para «retinol» · Lista. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"acido salicilico","u":"https://www.paris.cl/listas/acido-salicilico/","p":"Not Ranked (Top 10)."},{"a":"parches para ojera","u":"https://www.paris.cl/listas/parches-para-ojeras/","p":"Not Ranked (Top 10)."},{"a":"skincare coreano","u":"https://www.paris.cl/belleza/cuidado-tratamiento/skincare-coreano/","p":"27.0"},{"a":"set de skincare","u":"https://www.paris.cl/belleza/skincare/set-skincare/","p":"Failed."},{"a":"mascarilla facial coreana","u":"https://www.paris.cl/listas/mascarillas-coreana/","p":"Not Ranked (Top 10)."},{"a":"tonico facial coreano","u":"https://www.paris.cl/listas/tonico-coreano/","p":"25.0"},{"a":"isdin","u":"https://www.paris.cl/belleza/dermocosmetica/isdin/","p":"Not Ranked (Top 10)."},{"a":"la roche posay","u":"https://www.paris.cl/belleza/dermocosmetica/la-roche-posay/","p":"10 (Ad: 4)"},{"a":"vichy","u":"https://www.paris.cl/belleza/dermocosmetica/vichy/","p":"Not Ranked (Top 10)."},{"a":"eucerin","u":"https://www.paris.cl/belleza/dermocosmetica/eucerin/","p":"Not Ranked (Top 10)."}]},{"mes":"Octubre 26","semana":1,"ord":3,"keyword":"Makeup Carolina Herrera","tipo":"PLP","url":"https://www.paris.cl/belleza/marcas/makeup-carolina-herrera/","texto":"Contenido SEO para «Makeup Carolina Herrera» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"perfumes mujer carolina herrera","u":"https://www.paris.cl/belleza/perfumes/mujer/carolina-herrera/","p":"8 (Ad: 4)"},{"a":"carolina herrera perfume","u":"https://www.paris.cl/belleza/perfumes/carolina-herrera/","p":"Not Ranked (Top 10)."},{"a":"la bomba carolina herrera","u":"https://www.paris.cl/listas/la-bomba-carolina-herrera/","p":"6.0"},{"a":"carolina herrera 212","u":"https://www.paris.cl/listas/carolina-herrera-212/","p":"Failed."},{"a":"carolina herrera good girl","u":"https://www.paris.cl/listas/carolina-herrera-good-girl/","p":"Not Ranked (Top 10)."},{"a":"carolina herrera","u":"https://www.paris.cl/belleza/marcas/carolina-herrera/","p":"9.0"},{"a":"perfume carolina herrera 100 ml","u":"https://www.paris.cl/listas/perfume-carolina-herrera-100-ml/","p":"7.0"},{"a":"maquillaje","u":"https://www.paris.cl/belleza/maquillaje/","p":"Not Ranked (Top 10)."},{"a":"desmaquillante bifasico","u":"https://www.paris.cl/listas/desmaquillante-bifasico/","p":"Not Ranked (Top 10)."},{"a":"mascara de pestañas","u":"https://www.paris.cl/belleza/maquillaje/mascaras-de-pestanas/","p":"8.0"}]},{"mes":"Octubre 26","semana":1,"ord":4,"keyword":"organizadores coche","tipo":"Filtro","url":"https://www.paris.cl/ninos/mundo-bebes/organizadores-coche/","texto":"Contenido SEO para «organizadores coche» · Filtro. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"bolsos maternales","u":"https://www.paris.cl/ninos/mundo-bebe/portabebes-bolsos-maternales/","p":"Not Ranked (Top 10)."},{"a":"mantas bebé","u":"https://www.paris.cl/ninos/dormitorio-infantil/ropa-cama/mantas/","p":"Not Ranked (Top 10)."},{"a":"alzadores para niños","u":"https://www.paris.cl/ninos/sillas/alzadores/","p":"Failed."},{"a":"mochila de niño","u":"https://www.paris.cl/ninos/mundo-escolar/mochilas-infantiles/","p":"Not Ranked (Top 10)."},{"a":"silla de comer bebe","u":"https://www.paris.cl/ninos/mundo-bebe/sillas-comer/","p":"13 (Ad: 3)"},{"a":"reja seguridad bebes","u":"https://www.paris.cl/ninos/mundo-bebe/rejas-seguridad-ninos/","p":"7.0"},{"a":"coche bebesit","u":"https://www.paris.cl/ninos/coches/bebesit/","p":"Failed."},{"a":"maxi cosi","u":"https://www.paris.cl/ninos/coches/maxi-cosi/","p":"25.0"},{"a":"coche lubabycas","u":"https://www.paris.cl/listas/coche-lubabycas/","p":"9.0"},{"a":"coches de bebe","u":"https://www.paris.cl/ninos/coches/","p":"11.0"}]},{"mes":"Octubre 26","semana":1,"ord":5,"keyword":"zapatillas urbanas","tipo":"PLP","url":"https://www.paris.cl/zapatos/zapatillas/urbanas/","texto":"Contenido SEO para «zapatillas urbanas» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"zapatillas","u":"https://www.paris.cl/zapatos/zapatillas/","p":"8.0"},{"a":"limpia y customiza zapatillas","u":"https://www.paris.cl/zapatos/zapatillas/limpia-y-customiza/","p":"3.0"},{"a":"zapatillas asics","u":"https://www.paris.cl/zapatos/zapatillas/asics/","p":"15.0"},{"a":"zapatillas adidas","u":"https://www.paris.cl/zapatos/zapatillas/adidas/","p":"4 (Ad: 3)"},{"a":"zapatillas skechers","u":"https://www.paris.cl/zapatos/zapatillas/skechers/","p":"7.0"},{"a":"zapatillas con plataforma","u":"https://www.paris.cl/listas/zapatillas-con-plataformas/","p":"Not Ranked (Top 10)."},{"a":"zapatillas puma","u":"https://www.paris.cl/listas/zapatillas-puma/","p":"15.0"},{"a":"hush puppies kids","u":"https://www.paris.cl/zapatos/ninos/hush-puppies-kids/","p":"Not Ranked (Top 10)."},{"a":"zapatillas blancas","u":"https://www.paris.cl/listas/zapatillas-blancas/","p":"Not Ranked (Top 30)."},{"a":"puma carina lift","u":"https://www.paris.cl/listas/puma-carina-lift/","p":"Not Ranked (Top 10)."}]},{"mes":"Octubre 26","semana":1,"ord":6,"keyword":"zapatillas","tipo":"PLP","url":"https://www.paris.cl/zapatos/zapatillas/","texto":"Contenido SEO para «zapatillas» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"nike","u":"https://www.paris.cl/listas/nike/","p":""},{"a":"zapatillas con plataforma","u":"https://www.paris.cl/listas/zapatillas-con-plataformas/","p":"Not Ranked (Top 10)."},{"a":"limpia y customiza zapatillas","u":"https://www.paris.cl/zapatos/zapatillas/limpia-y-customiza/","p":"3.0"},{"a":"zapatillas asics","u":"https://www.paris.cl/zapatos/zapatillas/asics/","p":"15.0"},{"a":"zapatillas adidas","u":"https://www.paris.cl/zapatos/zapatillas/adidas/","p":"4 (Ad: 3)"},{"a":"adidas forum","u":"https://www.paris.cl/listas/adidas-forum/","p":"Not Ranked (Top 30)."},{"a":"zapatillas de running hoka","u":"https://www.paris.cl/zapatos/zapatillas/running/hoka/","p":"3 (Ad: 2)"},{"a":"puma karmen II","u":"https://www.paris.cl/listas/puma-karmen-II/","p":"Failed."},{"a":"new balance 9060","u":"https://www.paris.cl/listas/new-balance-9060/","p":"Not Ranked (Top 10)."},{"a":"zapatillas de training","u":"https://www.paris.cl/zapatos/zapatillas/training/","p":"Not Ranked (Top 10)."}]},{"mes":"Octubre 26","semana":1,"ord":7,"keyword":"perfumes de mujer","tipo":"PLP","url":"https://www.paris.cl/belleza/perfumes/mujer/","texto":"Contenido SEO para «perfumes de mujer» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"perfumes mujer carolina herrera","u":"https://www.paris.cl/belleza/perfumes/mujer/carolina-herrera/","p":"8 (Ad: 4)"},{"a":"perfume billie eilish","u":"https://www.paris.cl/belleza/perfumes/billie-eilish/","p":"18.0"},{"a":"perfumes prada","u":"https://www.paris.cl/belleza/perfumes/prada/","p":"11.0"},{"a":"perfume sabrina carpenter","u":"https://www.paris.cl/listas/perfume-sabrina-carpenter/","p":"Failed."},{"a":"perfume miu miu","u":"https://www.paris.cl/belleza/marcas/miu-miu/","p":"3.0"},{"a":"perfumes para primavera","u":"https://www.paris.cl/listas/perfumes-florales-mujer/","p":"Not Ranked (Top 30)."},{"a":"perfumes arabe para primavera","u":"https://www.paris.cl/listas/perfumes-arabes-primavera/","p":"Not Ranked (Top 10)."},{"a":"perfume calvin klein one","u":"https://www.paris.cl/listas/ck-one/","p":"4 (Ad: 2)"},{"a":"tommy girl","u":"https://www.paris.cl/listas/perfume-tommy-girl/","p":"7.0"},{"a":"prada paradoxe","u":"https://www.paris.cl/listas/prada-paradoxe/","p":"(Product Ad: 3)"}]},{"mes":"Octubre 26","semana":1,"ord":8,"keyword":"anastasia beverly hills","tipo":"PLP","url":"https://www.paris.cl/belleza/marcas/anastasia-beverly-hills/","texto":"Contenido SEO para «anastasia beverly hills» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"mascara de pestañas","u":"https://www.paris.cl/belleza/maquillaje/mascaras-de-pestanas/","p":"8.0"},{"a":"maquillaje","u":"https://www.paris.cl/belleza/maquillaje/","p":"Not Ranked (Top 10)."},{"a":"bronzers","u":"https://www.paris.cl/belleza/maquillaje/bronzers/","p":"Not Ranked (Top 10)."},{"a":"polvos","u":"https://www.paris.cl/belleza/maquillaje/polvos/","p":"Failed."},{"a":"delineadores","u":"https://www.paris.cl/belleza/maquillaje/delineadores/","p":"Not Ranked (Top 10)."},{"a":"bases de maquillaje","u":"https://www.paris.cl/belleza/maquillaje/bases/","p":"Not Ranked (Top 10)."},{"a":"correctores de ojeras","u":"https://www.paris.cl/belleza/maquillaje/correctores/","p":"19.0"},{"a":"sombras de ojos / contorno de ojos","u":"https://www.paris.cl/belleza/maquillaje/ojos/sombras-de-ojos/","p":"Not Ranked (Top 10)."},{"a":"encrespador de pestañas","u":"https://www.paris.cl/belleza/maquillaje/encrespadores-pestanas/","p":"Not Ranked (Top 10)."},{"a":"iluminador","u":"https://www.paris.cl/belleza/maquillaje/rostro/iluminadores/","p":"Not Ranked (Top 10)."}]},{"mes":"Octubre 26","semana":1,"ord":9,"keyword":"perfumes mujer carolina herrera","tipo":"Filtro","url":"https://www.paris.cl/belleza/perfumes/mujer/carolina-herrera/","texto":"Contenido SEO para «perfumes mujer carolina herrera» · Filtro. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"perfumes de mujer","u":"https://www.paris.cl/belleza/perfumes/mujer/","p":"11.0"},{"a":"Makeup Carolina Herrera","u":"https://www.paris.cl/belleza/marcas/makeup-carolina-herrera/","p":"3.0"},{"a":"carolina herrera perfume","u":"https://www.paris.cl/belleza/perfumes/carolina-herrera/","p":"Not Ranked (Top 10)."},{"a":"la bomba carolina herrera","u":"https://www.paris.cl/listas/la-bomba-carolina-herrera/","p":"6.0"},{"a":"carolina herrera 212","u":"https://www.paris.cl/listas/carolina-herrera-212/","p":"6.0"},{"a":"carolina herrera good girl","u":"https://www.paris.cl/listas/carolina-herrera-good-girl/","p":"Not Ranked (Top 10)."},{"a":"perfumes hombre","u":"https://www.paris.cl/belleza/perfumes/hombre/","p":"8.0"},{"a":"perfumes en miniatura","u":"https://www.paris.cl/listas/perfumes-en-miniaturas/","p":"Not Ranked (Top 10)."},{"a":"perfumes para primavera","u":"https://www.paris.cl/listas/perfumes-florales-mujer/","p":"Not Ranked (Top 30)."},{"a":"perfumes arabes para primavera","u":"https://www.paris.cl/listas/perfumes-arabes-primavera/","p":"Not Ranked (Top 10)."}]},{"mes":"Octubre 26","semana":1,"ord":10,"keyword":"enteritos","tipo":"Filtro","url":"https://www.paris.cl/mujer/moda/enteritos/","texto":"Contenido SEO para «enteritos» · Filtro. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"faldas","u":"https://www.paris.cl/mujer/moda/faldas/","p":"Not Ranked (Top 10)."},{"a":"vestidos","u":"https://www.paris.cl/mujer/moda/vestidos/","p":""},{"a":"jardineras","u":"https://www.paris.cl/mujer/moda/jardineras/","p":"Not Ranked (Top 30)."},{"a":"vestidos y faldas","u":"https://www.paris.cl/mujer/moda/vestidos-faldas/","p":"4.0"},{"a":"polera manga larga mujer","u":"https://www.paris.cl/listas/polera-manga-larga-mujer/","p":"17 (Ad: 1)"},{"a":"pantalon cargo mujer","u":"https://www.paris.cl/listas/pantalones-cargo-mujer/","p":"Not Ranked (Top 10)."},{"a":"denim","u":"https://www.paris.cl/listas/denim/","p":"Not Ranked (Top 10)."},{"a":"pantalon negro mujer","u":"https://www.paris.cl/listas/pantalon-negro-mujer/","p":"6.0"},{"a":"falda larga","u":"https://www.paris.cl/listas/faldas-largas/","p":"Not Ranked (Top 30)."},{"a":"corbatas","u":"https://www.paris.cl/listas/corbatas/","p":"Not Ranked (Top 10)."}]},{"mes":"Octubre 26","semana":1,"ord":11,"keyword":"faldas","tipo":"Filtro","url":"https://www.paris.cl/mujer/moda/faldas/","texto":"Contenido SEO para «faldas» · Filtro. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"accesorios","u":"https://www.paris.cl/mujer/accesorios-moda/","p":""},{"a":"Vopero","u":"https://www.paris.cl/moda-circular/marcas-destacadas/vopero/","p":"5.0"},{"a":"denim","u":"https://www.paris.cl/listas/denim/","p":"Not Ranked (Top 10)."},{"a":"falda larga","u":"https://www.paris.cl/listas/faldas-largas/","p":"9 (Ad: 4)"},{"a":"jardineras","u":"https://www.paris.cl/mujer/moda/jardineras/","p":"Not Ranked (Top 30)."},{"a":"vestidos y faldas","u":"https://www.paris.cl/mujer/moda/vestidos-faldas/","p":"4.0"},{"a":"shorts mujer","u":"https://www.paris.cl/mujer/moda/shorts/","p":""},{"a":"falda plisada","u":"https://www.paris.cl/listas/falda-plisada/","p":"5.0"},{"a":"faldas short","u":"https://www.paris.cl/listas/faldas-short/","p":"Not Ranked (Top 10)."},{"a":"jeans palazzo","u":"https://www.paris.cl/listas/jeans-palazzo/","p":"9 (Ad: 2)"}]},{"mes":"Octubre 26","semana":1,"ord":12,"keyword":"opposite","tipo":"PLP","url":"https://www.paris.cl/mujer/marcas/opposite/","texto":"Contenido SEO para «opposite» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"bufandas animal print","u":"https://www.paris.cl/listas/bufandas-animal-print/","p":"12.0"},{"a":"vestido para primavera","u":"https://www.paris.cl/listas/vestido-para-primavera/","p":"5 (Ad: 2)"},{"a":"blusas mujer","u":"https://www.paris.cl/mujer/moda/blusas/","p":""},{"a":"shorts mujer","u":"https://www.paris.cl/mujer/moda/shorts/","p":""},{"a":"faldas","u":"https://www.paris.cl/mujer/moda/faldas/","p":"Not Ranked (Top 10)."},{"a":"jeans palazzo","u":"https://www.paris.cl/listas/jeans-palazzo/","p":"9 (Ad: 2)"},{"a":"chaqueta puffer","u":"https://www.paris.cl/listas/chaqueta-puffer/","p":"Not Ranked (Top 20)."},{"a":"vestidos blancos","u":"https://www.paris.cl/listas/vestidos-blancos/","p":"Not Ranked (Top 20)."},{"a":"chaqueta bomber mujer","u":"https://www.paris.cl/listas/chaquetas-bomber-mujer/","p":"Not Ranked (Top 20)."},{"a":"crop top mujer","u":"https://www.paris.cl/listas/crop-top-mujer/","p":"5.0"}]},{"mes":"Octubre 26","semana":1,"ord":13,"keyword":"limpia y customiza zapatillas","tipo":"PLP","url":"https://www.paris.cl/zapatos/zapatillas/limpia-y-customiza/","texto":"Contenido SEO para «limpia y customiza zapatillas» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"plantillas ortopedicas","u":"https://www.paris.cl/listas/plantillas-ortopedicas/","p":"Failed."},{"a":"zapatillas urbanas","u":"https://www.paris.cl/zapatos/zapatillas/urbanas/","p":"1.0"},{"a":"zapatillas","u":"https://www.paris.cl/zapatos/zapatillas/","p":"8.0"},{"a":"adidas forum","u":"https://www.paris.cl/listas/adidas-forum/","p":"Not Ranked (Top 30)."},{"a":"zapatillas asics","u":"https://www.paris.cl/zapatos/zapatillas/asics/","p":"15.0"},{"a":"zapatillas de running hoka","u":"https://www.paris.cl/zapatos/zapatillas/running/hoka/","p":"3 (Ad: 2)"},{"a":"nike dunk low","u":"https://www.paris.cl/listas/nike-dunk-low/","p":""},{"a":"zapatillas adidas grand court","u":"https://www.paris.cl/listas/zapatillas-adidas-grand-court/","p":"3.0"},{"a":"zapatillas de training","u":"https://www.paris.cl/zapatos/zapatillas/training/","p":"Not Ranked (Top 10)."},{"a":"puma c skate","u":"https://www.paris.cl/listas/puma-c-skate/","p":"9.0"}]},{"mes":"Octubre 26","semana":1,"ord":14,"keyword":"disfraces y máscaras","tipo":"PLP","url":"https://www.paris.cl/jugueteria/didacticos-recreativos/disfraces-mascaras/","texto":"Contenido SEO para «disfraces y máscaras» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"Hot Wheels","u":"https://www.paris.cl/listas/hot-wheels/","p":"Not Ranked (Top 10)."},{"a":"disfraces","u":"https://www.paris.cl/listas/disfraces/","p":"Not Ranked (Top 10)."},{"a":"disfraces cosplay","u":"https://www.paris.cl/listas/disfraces-cosplay/","p":"13.0"},{"a":"mascaras de halloween","u":"https://www.paris.cl/jugueteria/didacticos-recreativos/disfraces-mascaras/mascaras/","p":"11.0"},{"a":"gabby dollhouse","u":"https://www.paris.cl/jugueteria/gabbys-dollhouse/","p":"9.0"},{"a":"disfraz de pirata","u":"https://www.paris.cl/listas/disfraz-de-pirata/","p":"17.0"},{"a":"decoracion halloween","u":"https://www.paris.cl/listas/decoracion-halloween/","p":"Not Ranked (Top 20)."},{"a":"adornos halloween","u":"https://www.paris.cl/listas/adornos-de-halloween/","p":"12.0"},{"a":"disfraces halloween","u":"https://www.paris.cl/listas/disfraces-halloween/","p":"Not Ranked (Top 10)."},{"a":"disfraz halloween mujer","u":"https://www.paris.cl/listas/disfraz-halloween-mujer/","p":"15.0"}]},{"mes":"Octubre 26","semana":1,"ord":15,"keyword":"relojes Tissot","tipo":"Filtro","url":"https://www.paris.cl/hombre/accesorios/relojes/tissot/","texto":"Contenido SEO para «relojes Tissot» · Filtro. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"reloj automatico hombre","u":"https://www.paris.cl/listas/reloj-automatico-hombre/","p":"9.0"},{"a":"reloj smartwatch hombre","u":"https://www.paris.cl/listas/smartwatch-hombre/","p":"4.0"},{"a":"reloj inteligente hombre","u":"https://www.paris.cl/listas/reloj-inteligente-hombre/","p":"Failed."},{"a":"reloj mujer","u":"https://www.paris.cl/mujer/accesorios-moda/relojes/","p":"Failed."},{"a":"joyas","u":"https://www.paris.cl/mujer/accesorios-moda/joyas/","p":"Not Ranked (Top 10)."},{"a":"relojes","u":"https://www.paris.cl/listas/relojes/","p":"22.0"},{"a":"bisuteria","u":"https://www.paris.cl/mujer/accesorios-moda/bisuteria/","p":"Not Ranked (Top 10)."},{"a":"lentes opticos mujer","u":"https://www.paris.cl/mujer/accesorios-moda/lentes-opticos-mujer/","p":"13.0"},{"a":"accesorios hombre","u":"https://www.paris.cl/hombre/accesorios/","p":"14.0"},{"a":"lentes opticos hombre","u":"https://www.paris.cl/hombre/accesorios/lentes-opticos-hombre/","p":"17.0"}]},{"mes":"Octubre 26","semana":1,"ord":16,"keyword":"futon","tipo":"Lista","url":"https://www.paris.cl/listas/futon/","texto":"Contenido SEO para «futon» · Lista. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"sofá cama","u":"https://www.paris.cl/muebles/living-sala-estar/sofas-cama-futones/","p":"4.0"},{"a":"camas","u":"https://www.paris.cl/dormitorio/camas-plazaje/","p":"(Ad: 4)"},{"a":"velador","u":"https://www.paris.cl/dormitorio/muebles/veladores/","p":"7.0"},{"a":"closet 8 puertas","u":"https://www.paris.cl/listas/closet-8-puertas/","p":"7 (Ad: 1)"},{"a":"camas europeas","u":"https://www.paris.cl/dormitorio/camas-europeas/","p":"12.0"},{"a":"muebles modulares","u":"https://www.paris.cl/listas/muebles-modulares/","p":"Failed."},{"a":"sofas de tela","u":"https://www.paris.cl/listas/sofas-de-tela/","p":"Not Ranked (Top 10)."},{"a":"sillas","u":"https://www.paris.cl/muebles/sillas/","p":"Not Ranked (Top 20)."},{"a":"closet","u":"https://www.paris.cl/dormitorio/muebles/closet/","p":"24.0"},{"a":"sitial","u":"https://www.paris.cl/muebles/living-sala-estar/sitiales-poltronas-banquetas/","p":"7 (Ad: 2)"}]},{"mes":"Octubre 26","semana":1,"ord":17,"keyword":"sofá cama","tipo":"PLP","url":"https://www.paris.cl/muebles/living-sala-estar/sofas-cama-futones/","texto":"Contenido SEO para «sofá cama» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"camas","u":"https://www.paris.cl/dormitorio/camas-plazaje/","p":"(Ad: 4)"},{"a":"respaldo cama king","u":"https://www.paris.cl/listas/respaldo-cama-king/","p":"7.0"},{"a":"camas multifuncionales","u":"https://www.paris.cl/dormitorio/camas-funcionales/multifuncionales/","p":"4.0"},{"a":"futon","u":"https://www.paris.cl/listas/futon/","p":"(Ad: 2)"},{"a":"sofas de tela","u":"https://www.paris.cl/listas/sofas-de-tela/","p":"Not Ranked (Top 10)."},{"a":"sofa cuero 3 cuerpos","u":"https://www.paris.cl/listas/sofa-cuero-3-cuerpos/","p":"10.0"},{"a":"sofás/sillones rosen","u":"https://www.paris.cl/muebles/living-sala-estar/sofas-sillones/rosen/","p":"(Ad: 3)"},{"a":"sofa cama rosen","u":"https://www.paris.cl/muebles/living-sala-estar/sofas-cama-futones/rosen/","p":"3 (Ad: 1)"},{"a":"sofa en l","u":"https://www.paris.cl/listas/sofas-en-l/","p":"5 (Ad: 1)"},{"a":"sofa 1 cuerpo","u":"https://www.paris.cl/muebles/living-sala-estar/sofas-sillones/1-cuerpo/","p":"4 (Ad: 2)"}]},{"mes":"Octubre 26","semana":1,"ord":18,"keyword":"camas","tipo":"Filtro","url":"https://www.paris.cl/dormitorio/camas-plazaje/","texto":"Contenido SEO para «camas» · Filtro. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"respaldo cama king","u":"https://www.paris.cl/listas/respaldo-cama-king/","p":"7.0"},{"a":"camas multifuncionales","u":"https://www.paris.cl/dormitorio/camas-funcionales/multifuncionales/","p":"4.0"},{"a":"futon","u":"https://www.paris.cl/listas/futon/","p":"(Ad: 2)"},{"a":"sofá cama","u":"https://www.paris.cl/muebles/living-sala-estar/sofas-cama-futones/","p":"4.0"},{"a":"base cama 2 plazas","u":"https://www.paris.cl/listas/base-cama-2-plazas/","p":"Not Ranked (Top 10)."},{"a":"cama de 1.5 plaza","u":"https://www.paris.cl/dormitorio/camas-plazaje/1-5-plazas/","p":"Not Ranked (Top 10)."},{"a":"camas europeas","u":"https://www.paris.cl/dormitorio/camas-europeas/","p":"12 (Ad: 2)"},{"a":"marquesa","u":"https://www.paris.cl/dormitorio/camas-funcionales/marquesas/","p":"Not Ranked (Top 10)."},{"a":"ropa de cama","u":"https://www.paris.cl/dormitorio/ropa-cama/","p":"10.0"},{"a":"muebles de dormitorio","u":"https://www.paris.cl/dormitorio/muebles/","p":"8.0"}]},{"mes":"Octubre 26","semana":1,"ord":19,"keyword":"respaldo cama king","tipo":"Lista","url":"https://www.paris.cl/listas/respaldo-cama-king/","texto":"Contenido SEO para «respaldo cama king» · Lista. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"camas multifuncionales","u":"https://www.paris.cl/dormitorio/camas-funcionales/multifuncionales/","p":"4.0"},{"a":"camas","u":"https://www.paris.cl/dormitorio/camas-plazaje/","p":"(Ad: 4)"},{"a":"cubrecamas king","u":"https://www.paris.cl/listas/cubrecamas-king/","p":"5.0"},{"a":"cannon","u":"https://www.paris.cl/listas/cannon/","p":"5.0"},{"a":"plumon king","u":"https://www.paris.cl/listas/plumon-king/","p":"7 (Ad: 4)"},{"a":"cama king rosen","u":"https://www.paris.cl/dormitorio/camas-europeas/king-super-king/rosen/","p":"3.0"},{"a":"camas king","u":"https://www.paris.cl/dormitorio/camas-plazaje/king-super-king/","p":"7.0"},{"a":"camas europeas king","u":"https://www.paris.cl/dormitorio/camas-europeas/king-super-king/","p":"8.0"},{"a":"colchon super king","u":"https://www.paris.cl/dormitorio/colchones/super-king/","p":"(Ad: 2)"},{"a":"muebles de dormitorio","u":"https://www.paris.cl/dormitorio/muebles/","p":"8.0"}]},{"mes":"Octubre 26","semana":1,"ord":20,"keyword":"camas multifuncionales","tipo":"PLP","url":"https://www.paris.cl/dormitorio/camas-funcionales/multifuncionales/","texto":"Contenido SEO para «camas multifuncionales» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"camas","u":"https://www.paris.cl/dormitorio/camas-plazaje/","p":"(Ad: 4)"},{"a":"sofá cama","u":"https://www.paris.cl/muebles/living-sala-estar/sofas-cama-futones/","p":"4.0"},{"a":"cama baul 2 plazas","u":"https://www.paris.cl/listas/cama-baul-2-plazas/","p":"13.0"},{"a":"cama nido 1 plaza","u":"https://www.paris.cl/listas/cama-nido-1-plaza/","p":"7.0"},{"a":"cama flex 2 plazas","u":"https://www.paris.cl/dormitorio/camas-europeas/2-plazas/flex/","p":"8.0"},{"a":"cama celta","u":"https://www.paris.cl/dormitorio/camas-europeas/celta/","p":"9.0"},{"a":"cama cannon","u":"https://www.paris.cl/dormitorio/camas-plazaje/cannon/","p":"8 (Product Ad: 1)"},{"a":"cama 2 plazas","u":"https://www.paris.cl/dormitorio/camas-plazaje/2-plazas/","p":"8.0"},{"a":"scaldasonno","u":"https://www.paris.cl/dormitorio/ropa-cama/calientacamas/scaldasonno/","p":"5.0"},{"a":"cama tempo rosen","u":"https://www.paris.cl/listas/cama-tempo-rosen/","p":"11.0"}]},{"mes":"Octubre 26","semana":1,"ord":21,"keyword":"arrimo flotante","tipo":"Lista","url":"https://www.paris.cl/listas/arrimo-flotante/","texto":"Contenido SEO para «arrimo flotante» · Lista. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"lamparas colgantes","u":"https://www.paris.cl/listas/lamparas-colgantes/","p":"Failed."},{"a":"arrimo de madera","u":"https://www.paris.cl/listas/arrimo-de-madera/","p":"Failed."},{"a":"estante metálico","u":"https://www.paris.cl/listas/estante-metalico/","p":"Not Ranked (Top 10)."},{"a":"arrimo/mesa de arrimo","u":"https://www.paris.cl/muebles/living-sala-estar/arrimos/","p":"9 (Ad: 3)"},{"a":"poltronas","u":"https://www.paris.cl/muebles/living-sala-estar/poltronas/","p":"9.0"},{"a":"muebles","u":"https://www.paris.cl/muebles/","p":"3.0"},{"a":"librero","u":"https://www.paris.cl/muebles/oficina/estantes-repisas/libreros/","p":"14.0"},{"a":"juegos de living","u":"https://www.paris.cl/muebles/living-sala-estar/juegos/","p":"2.0"},{"a":"juego de terraza","u":"https://www.paris.cl/muebles/terrazas/","p":"8.0"},{"a":"estantes y repisas","u":"https://www.paris.cl/muebles/oficina/estantes-repisas/","p":"6.0"}]},{"mes":"Octubre 26","semana":1,"ord":22,"keyword":"s24 ultra / samsung s24 ultra","tipo":"Lista","url":"https://www.paris.cl/listas/samsung-galaxy-s24-ultra/","texto":"Contenido SEO para «s24 ultra / samsung s24 ultra» · Lista. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"samsung a56","u":"https://www.paris.cl/listas/samsung-a56/","p":"Not Ranked (Top 10)."},{"a":"cargadores samsung","u":"https://www.paris.cl/tecnologia/celulares/accesorios/cargadores/samsung/","p":"Failed."},{"a":"samsung s23 plus","u":"https://www.paris.cl/listas/samsung-s23-plus/","p":"Failed."},{"a":"samsung s22","u":"https://www.paris.cl/listas/samsung-s22/","p":"4.0"},{"a":"samsung galaxy","u":"https://www.paris.cl/listas/samsung-galaxy/","p":"5.0"},{"a":"samsung z flip","u":"https://www.paris.cl/listas/galaxy-z-flip/","p":""},{"a":"samsung galaxy watch","u":"https://www.paris.cl/listas/galaxy-watch/","p":"Not Ranked (Top 10)."},{"a":"samsung S26","u":"https://www.paris.cl/listas/samsung-s26/","p":"Not Ranked (Top 10)."},{"a":"samsung S26 Plus","u":"https://www.paris.cl/listas/samsung-s26-plus/","p":"Not Ranked (Top 10)."},{"a":"samsung S26 Ultra","u":"https://www.paris.cl/listas/samsung-s26-ultra/","p":"Not Ranked (Top 10)."}]},{"mes":"Octubre 26","semana":1,"ord":23,"keyword":"lenovo legion 5","tipo":"Lista","url":"https://www.paris.cl/listas/lenovo-legion-5/","texto":"Contenido SEO para «lenovo legion 5» · Lista. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"lenovo thinkpad","u":"https://www.paris.cl/listas/lenovo-thinkpad/","p":"Failed."},{"a":"lenovo idea tab","u":"https://www.paris.cl/listas/lenovo-idea-tab/","p":"Failed."},{"a":"lenovo ideapad slim 3","u":"https://www.paris.cl/listas/lenovo-ideapad-slim-3/","p":"7.0"},{"a":"lenovo yoga tab plus","u":"https://www.paris.cl/listas/lenovo-yoga-tab-plus/","p":"18 (Ad: 3)"},{"a":"pc gamer","u":"https://www.paris.cl/tecnologia/computadores/pc-gamer/","p":""},{"a":"computador lenovo","u":"https://www.paris.cl/tecnologia/computadores/lenovo/","p":"4.0"},{"a":"tablet lenovo","u":"https://www.paris.cl/tecnologia/computadores/ipad-tablet/lenovo/","p":"3 (Ad: 3)"},{"a":"notebooks Lenovo","u":"https://www.paris.cl/tecnologia/computadores/notebooks/lenovo/","p":"Failed."},{"a":"cargadores lenovo","u":"https://www.paris.cl/tecnologia/cargadores/lenovo/","p":"7.0"},{"a":"lenovo","u":"https://www.paris.cl/tecnologia/marcas/lenovo/","p":"9.0"}]},{"mes":"Octubre 26","semana":1,"ord":24,"keyword":"lavamanos","tipo":"Lista","url":"https://www.paris.cl/listas/lavamanos/","texto":"Contenido SEO para «lavamanos» · Lista. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"lavaplatos","u":"https://www.paris.cl/listas/lavaplatos/","p":"Not Ranked (Top 10)."},{"a":"monomando lavamanos","u":"https://www.paris.cl/ferreteria/griferia/griferia-lavamanos/monomando-lavamanos/","p":"Not Ranked (Top 10)."},{"a":"estante para baño","u":"https://www.paris.cl/listas/estante-de-bano/","p":"Failed."},{"a":"set de baño","u":"https://www.paris.cl/decohogar/bano/set-de-bano/","p":"15.0"},{"a":"mueble de baño","u":"https://www.paris.cl/listas/mueble-de-bano/","p":"Not Ranked (Top 10)."},{"a":"ventana","u":"https://www.paris.cl/listas/ventana/","p":"Not Ranked (Top 10)."},{"a":"termopanel","u":"https://www.paris.cl/listas/termopanel/","p":"Not Ranked (Top 10)."},{"a":"cortinas de baño","u":"https://www.paris.cl/decohogar/bano/cortinas/","p":"11.0"},{"a":"repisa de baño","u":"https://www.paris.cl/listas/repisa-de-bano/","p":"7.0"},{"a":"taza de baño","u":"https://www.paris.cl/construccion/bano/wc-y-sanitarios/","p":"Not Ranked (Top 10)."}]},{"mes":"Octubre 26","semana":1,"ord":25,"keyword":"samsung a56","tipo":"Lista","url":"https://www.paris.cl/listas/samsung-a56/","texto":"Contenido SEO para «samsung a56» · Lista. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"s24 ultra / samsung s24 ultra","u":"https://www.paris.cl/listas/samsung-galaxy-s24-ultra/","p":"Not Ranked (Top 10)."},{"a":"smartwatch samsung","u":"https://www.paris.cl/tecnologia/marcas/samsung/smartwatches/","p":"(Ad: 2)"},{"a":"samsung galaxy","u":"https://www.paris.cl/listas/samsung-galaxy/","p":"5.0"},{"a":"samsung note 10","u":"https://www.paris.cl/listas/samsung-note-10/","p":""},{"a":"samsung galaxy watch","u":"https://www.paris.cl/listas/galaxy-watch/","p":"Not Ranked (Top 10)."},{"a":"samsung S26","u":"https://www.paris.cl/listas/samsung-s26/","p":"Not Ranked (Top 10)."},{"a":"samsung S26 Plus","u":"https://www.paris.cl/listas/samsung-s26-plus/","p":"Not Ranked (Top 10)."},{"a":"samsung S26 Ultra","u":"https://www.paris.cl/listas/samsung-s26-ultra/","p":"Failed."},{"a":"samsung s24 plus","u":"https://www.paris.cl/listas/samsung-s24-plus/","p":"2.0"},{"a":"computadores samsung","u":"https://www.paris.cl/tecnologia/computadores/samsung/","p":"3 (Ad: 1)"}]},{"mes":"Octubre 26","semana":1,"ord":26,"keyword":"airpods 4","tipo":"Lista","url":"https://www.paris.cl/listas/airpods-4/","texto":"Contenido SEO para «airpods 4» · Lista. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"airpods","u":"https://www.paris.cl/listas/airpods/","p":"Failed."},{"a":"apple watch series 12","u":"https://www.paris.cl/listas/apple-watch-series-12/","p":"8.0"},{"a":"airpods 5","u":"https://www.paris.cl/listas/airpods-5/","p":"Not Ranked (Top 10)."},{"a":"iphone 18 pro max","u":"https://www.paris.cl/listas/iphone-18-pro-max/","p":"Not Ranked (Top 10)."},{"a":"iphone 18 pro","u":"https://www.paris.cl/listas/iphone-18-pro/","p":"Not Ranked (Top 30)."},{"a":"iphone 18","u":"https://www.paris.cl/listas/iphone-18/","p":"Not Ranked (Top 30)."},{"a":"iphone duo","u":"https://www.paris.cl/listas/iphone-duo/","p":"Not Ranked (Top 10)."},{"a":"cargador iphone","u":"https://www.paris.cl/tecnologia/celulares/accesorios/cargadores/apple/","p":"5.0"},{"a":"audífonos apple","u":"https://www.paris.cl/electro/audio/audifonos/apple/","p":"Not Ranked (Top 10)."},{"a":"apple","u":"https://www.paris.cl/tecnologia/marcas/apple/","p":"16.0"}]},{"mes":"Octubre 26","semana":1,"ord":27,"keyword":"lamparas colgantes","tipo":"Lista","url":"https://www.paris.cl/listas/lamparas-colgantes/","texto":"Contenido SEO para «lamparas colgantes» · Lista. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"arrimo flotante","u":"https://www.paris.cl/listas/arrimo-flotante/","p":"Failed."},{"a":"lamparas","u":"https://www.paris.cl/decohogar/decoracion/lamparas/","p":"Not Ranked (Top 10)."},{"a":"lampara de pie","u":"https://www.paris.cl/decohogar/iluminacion/lamparas-pie/","p":"Not Ranked (Top 10)."},{"a":"lamparas de velador","u":"https://www.paris.cl/listas/lamparas-de-velador/","p":"Failed."},{"a":"esquinero","u":"https://www.paris.cl/listas/esquinero/","p":"Failed."},{"a":"lámparas de techo","u":"https://www.paris.cl/listas/lamparas-de-techo/","p":"Failed."},{"a":"alfombra de pasillo","u":"https://www.paris.cl/decohogar/alfombras/pasillo/","p":"(Ad: 4)"},{"a":"cortinas roller black out","u":"https://www.paris.cl/decohogar/decoracion/cortinas/roller-black-out/","p":"22.0"},{"a":"biombo","u":"https://www.paris.cl/decohogar/decoracion/biombos/","p":"7.0"},{"a":"espejos","u":"https://www.paris.cl/decohogar/decoracion/espejos/","p":"Not Ranked (Top 10)."}]},{"mes":"Octubre 26","semana":1,"ord":28,"keyword":"purificador de aire","tipo":"Filtro","url":"https://www.paris.cl/linea-blanca/climatizacion/purificadores-de-aire/","texto":"Contenido SEO para «purificador de aire» · Filtro. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"Aire acondicionado","u":"https://www.paris.c/linea-blanca/climatizacion/aires-acondicionado/","p":"19.0"},{"a":"Aire Acondicionado Kendal","u":"https://www.paris.cl/linea-blanca/climatizacion/aires-acondicionado/kendal/","p":"Failed."},{"a":"Ventiladores de Pie","u":"https://www.paris.cl/linea-blanca/climatizacion/ventiladores-de-pie/","p":"9 (Ad: 4)"},{"a":"aire acondicionado samsung","u":"https://www.paris.cl/linea-blanca/climatizacion/aires-acondicionado/samsung/","p":"17.0"},{"a":"aire acondicionado lg","u":"https://www.paris.cl/linea-blanca/climatizacion/aires-acondicionado/lg/","p":"Failed."},{"a":"aire acondicionado 9000 btu","u":"https://www.paris.cl/listas/aire-acondicionado-9000-btu/","p":"Not Ranked (Top 10)."},{"a":"humidificador","u":"https://www.paris.cl/listas/humidificador/","p":"12.0"},{"a":"aires acondicionados split","u":"https://www.paris.cl/linea-blanca/climatizacion/aires-acondicionado/aires-acondicionados-split/","p":""},{"a":"ventilador","u":"https://www.paris.cl/linea-blanca/climatizacion/ventilacion/","p":"Failed."},{"a":"aire acondicionado clark","u":"https://www.paris.cl/linea-blanca/climatizacion/aires-acondicionado/clark/","p":"Not Ranked (Top 10)."}]},{"mes":"Octubre 26","semana":1,"ord":29,"keyword":"scooter eléctricos","tipo":"PLP","url":"https://www.paris.cl/deportes/movilidad-electrica/scooters-electricos/","texto":"Contenido SEO para «scooter eléctricos» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"scooter xiaomi","u":"https://www.paris.cl/listas/scooter-xiaomi/","p":"7.0"},{"a":"hoverboards","u":"https://www.paris.cl/deportes/movilidad-electrica/hoverboards/","p":"4.0"},{"a":"scooter segway","u":"https://www.paris.cl/listas/scooter-segway/","p":"Not Ranked (Top 10)."},{"a":"scooters","u":"https://www.paris.cl/deportes/aire-libre/patines-scooter-skates/scooters/","p":"Not Ranked (Top 30)."},{"a":"bicicletas spinning","u":"https://www.paris.cl/deportes/fitness/bicicletas-spinning/","p":"Failed."},{"a":"bicicletas electricas","u":"https://www.paris.cl/deportes/bicicletas/bicicletas-electricas/","p":"Failed."},{"a":"suplementos deportivos","u":"https://www.paris.cl/deportes/suplementos-deportivos/","p":"13.0"},{"a":"bicicletas bmx","u":"https://www.paris.cl/deportes/bicicletas/freestyle-bmx/","p":"6.0"},{"a":"bicicletas","u":"https://www.paris.cl/deportes/bicicletas/","p":"14.0"},{"a":"kettlebell","u":"https://www.paris.cl/listas/kettlebell/","p":"Not Ranked (Top 10)."}]},{"mes":"Octubre 26","semana":1,"ord":30,"keyword":"bicicleta de ruta","tipo":"PLP","url":"https://www.paris.cl/deportes/bicicletas/ruta-pista/","texto":"Contenido SEO para «bicicleta de ruta» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"bicicletas bmx","u":"https://www.paris.cl/deportes/bicicletas/freestyle-bmx/","p":"6.0"},{"a":"bicicletas","u":"https://www.paris.cl/deportes/bicicletas/","p":"14.0"},{"a":"scooter eléctricos","u":"https://www.paris.cl/deportes/movilidad-electrica/scooters-electricos/","p":"15.0"},{"a":"portabicicleta","u":"https://www.paris.cl/listas/portabicicleta/","p":""},{"a":"rodillo bicicleta","u":"https://www.paris.cl/listas/rodillo-bicicleta/","p":"Not Ranked (Top 10)."},{"a":"bicicletas aro 29","u":"https://www.paris.cl/listas/bicicletas-aro-29/","p":"Failed."},{"a":"casco de bicicleta","u":"https://www.paris.cl/listas/casco-bicicleta/","p":"Not Ranked (Top 10)."},{"a":"soporte de bicicleta","u":"https://www.paris.cl/listas/soporte-bicicleta/","p":"Not Ranked (Top 10)."},{"a":"bicicleta aro 16","u":"https://www.paris.cl/listas/bicicleta-aro-16/","p":"Not Ranked (Top 10)."},{"a":"bicicleta aro 26","u":"https://www.paris.cl/listas/bicicleta-aro-26/","p":"(Ad: 2)"}]},{"mes":"Octubre 26","semana":1,"ord":31,"keyword":"anillos inteligentes","tipo":"PLP","url":"https://www.paris.cl/tecnologia/wearables/anillos-inteligentes/","texto":"Contenido SEO para «anillos inteligentes» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"xiaomi watch","u":"https://www.paris.cl/tecnologia/wearables/smartwatches/xiaomi/","p":"Not Ranked (Top 10)."},{"a":"smartband xiaomi","u":"https://www.paris.cl/tecnologia/wearables/smartband/xiaomi/","p":"Failed."},{"a":"smartband","u":"https://www.paris.cl/tecnologia/wearables/smartband/","p":"4.0"},{"a":"celulares oppo","u":"https://www.paris.cl/tecnologia/celulares/oppo/","p":"11.0"},{"a":"smartwatch","u":"https://www.paris.cl/tecnologia/wearables/smartwatches/","p":"Failed."},{"a":"smartwatch huawei","u":"https://www.paris.cl/listas/smartwatch-huawei/","p":"4.0"},{"a":"smartwatch mujer","u":"https://www.paris.cl/listas/smartwatch-mujer/","p":"Not Ranked (Top 30)."},{"a":"reloj smartwatch hombre","u":"https://www.paris.cl/listas/smartwatch-hombre/","p":"4.0"},{"a":"oura ring","u":"https://www.paris.cl/listas/oura-ring/","p":"3.0"},{"a":"apple watch series 12","u":"https://www.paris.cl/listas/apple-watch-series-12/","p":"8.0"}]},{"mes":"Octubre 26","semana":1,"ord":32,"keyword":"Hot Wheels","tipo":"Lista","url":"https://www.paris.cl/listas/hot-wheels/","texto":"Contenido SEO para «Hot Wheels» · Lista. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"disfraces y máscaras","u":"https://www.paris.cl/jugueteria/didacticos-recreativos/disfraces-mascaras/","p":"Not Ranked (Top 10)."},{"a":"auto a control remoto","u":"https://www.paris.cl/jugueteria/autos-a-control-remoto/","p":"6.0"},{"a":"juegos magneticos","u":"https://www.paris.cl/listas/juegos-magneticos/","p":""},{"a":"correpasillos / correpasillos bebe","u":"https://www.paris.cl/jugueteria/correpasillos/","p":"5.0"},{"a":"ansaldo","u":"https://www.paris.cl/jugueteria/ansaldo/","p":"5.0"},{"a":"juegos de mesa","u":"https://www.paris.cl/jugueteria/didacticos-recreativos/juegos-mesa/","p":"5.0"},{"a":"juguetes sensoriales","u":"https://www.paris.cl/listas/juguetes-sensoriales/","p":"14.0"},{"a":"moviles para bebes","u":"https://www.paris.cl/jugueteria/moviles-para-bebes/","p":"12.0"},{"a":"andador bebe","u":"https://www.paris.cl/jugueteria/andador-caminador/","p":"5.0"},{"a":"","u":"","p":""}]},{"mes":"Octubre 26","semana":1,"ord":33,"keyword":"Kinegun","tipo":"Brand","url":"https://www.paris.cl/brand/kinegun/","texto":"Contenido SEO para «Kinegun» · Brand. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"masajeador facial","u":"https://www.paris.cl/listas/masajeador-facial/","p":"4.0"},{"a":"camilla para masajes","u":"https://www.paris.cl/belleza/cuidado-tratamiento/masaje-aromaterapia/camillas-chile/","p":"Not Ranked (Top 20)."},{"a":"masajeadores corporales","u":"https://www.paris.cl/listas/masajeadores-corporales/","p":"Not Ranked (Top 20)."},{"a":"electroestimulador","u":"https://www.paris.cl/listas/electroestimulador/","p":"3.0"},{"a":"pelota pilates","u":"https://www.paris.cl/listas/pelota-pilates/","p":"11.0"},{"a":"glucometro","u":"https://www.paris.cl/listas/glucometro/","p":"Not Ranked (Top 20)."},{"a":"toma presion","u":"https://www.paris.cl/listas/toma-presion/","p":"6.0"},{"a":"rodillera estabilizadora","u":"https://www.paris.cl/listas/rodillera-estabilizadora/","p":"Failed."},{"a":"bota ortopedica","u":"https://www.paris.cl/listas/bota-ortopedica/","p":"Failed."},{"a":"","u":"","p":""}]},{"mes":"Octubre 26","semana":1,"ord":34,"keyword":"Ma Griffe","tipo":"PLP","url":"https://www.paris.cl/mujer/marcas/ma-griffe/","texto":"Contenido SEO para «Ma Griffe» · PLP. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"ropa mujer / moda mujer","u":"https://www.paris.cl/mujer/moda/","p":""},{"a":"faldas","u":"https://www.paris.cl/mujer/moda/faldas/","p":"Not Ranked (Top 10)."},{"a":"chaqueta bomber mujer","u":"https://www.paris.cl/listas/chaquetas-bomber-mujer/","p":"Not Ranked (Top 20)."},{"a":"crop top mujer","u":"https://www.paris.cl/listas/crop-top-mujer/","p":"5.0"},{"a":"jardineras","u":"https://www.paris.cl/mujer/moda/jardineras/","p":"Not Ranked (Top 30)."},{"a":"vestidos y faldas","u":"https://www.paris.cl/mujer/moda/vestidos-faldas/","p":"4.0"},{"a":"pantalones mujer","u":"https://www.paris.cl/mujer/moda/jeans-pantalones/","p":""},{"a":"polera manga larga mujer","u":"https://www.paris.cl/listas/polera-manga-larga-mujer/","p":"17 (Ad: 1)"},{"a":"pantalon cargo mujer","u":"https://www.paris.cl/listas/pantalones-cargo-mujer/","p":"Not Ranked (Top 10)."},{"a":"pantalon negro mujer","u":"https://www.paris.cl/listas/pantalon-negro-mujer/","p":"6.0"}]},{"mes":"Octubre 26","semana":1,"ord":35,"keyword":"Metalofono","tipo":"Lista","url":"https://www.paris.cl/listas/metalofono/","texto":"Contenido SEO para «Metalofono» · Lista. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"pianos","u":"https://www.paris.cl/electro/instrumentos-musicales/pianos-y-teclados/","p":"18.0"},{"a":"guitarra","u":"https://www.paris.cl/electro/instrumentos-musicales/guitarras/","p":"Failed."},{"a":"teclado musical","u":"https://www.paris.cl/electro/instrumentos-musicales/teclados/","p":"7.0"},{"a":"guitarras eléctricas","u":"https://www.paris.cl/electro/instrumentos-musicales/guitarras-electricas/","p":"Not Ranked (Top 10)."},{"a":"bajo","u":"https://www.paris.cl/electro/instrumentos-musicales/bajos/","p":"Not Ranked (Top 20)."},{"a":"acordeones","u":"https://www.paris.cl/electro/instrumentos-musicales/acordeones/","p":"Not Ranked (Top 10)."},{"a":"violines","u":"https://www.paris.cl/electro/instrumentos-musicales/violines/","p":"27.0"},{"a":"guitarra electroacustica","u":"https://www.paris.cl/listas/guitarra-electroacustica/","p":"Not Ranked (Top 10)."},{"a":"guitarras acusticas","u":"https://www.paris.cl/listas/guitarras-acusticas/","p":"18.0"},{"a":"afinador de guitarra","u":"https://www.paris.cl/listas/afinador-de-guitarra/","p":"13.0"}]},{"mes":"Octubre 26","semana":1,"ord":36,"keyword":"kettlebell","tipo":"Lista","url":"https://www.paris.cl/listas/kettlebell/","texto":"Contenido SEO para «kettlebell» · Lista. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"pesas","u":"https://www.paris.cl/listas/pesas/","p":"Failed."},{"a":"set de pesas","u":"https://www.paris.cl/listas/set-de-pesas/","p":"6.0"},{"a":"guante de boxeo","u":"https://www.paris.cl/listas/guantes-boxeo/","p":"14.0"},{"a":"press banca","u":"https://www.paris.cl/listas/press-banca/","p":"3.0"},{"a":"saco de boxeo","u":"https://www.paris.cl/listas/saco-de-boxeo/","p":"5.0"},{"a":"bicicleta de ruta","u":"https://www.paris.cl/deportes/bicicletas/ruta-pista/","p":"Failed."},{"a":"home gym","u":"https://www.paris.cl/deportes/fitness/home-gym/","p":"9.0"},{"a":"trotadoras","u":"https://www.paris.cl/deportes/fitness/trotadoras/","p":"7.0"},{"a":"trampolin fitness","u":"https://www.paris.cl/listas/trampolin-fitness/","p":"3.0"},{"a":"ultimate fitness","u":"https://www.paris.cl/deportes/fitness/ultimate-fitness/","p":"(Product Ad: 4)"}]},{"mes":"Octubre 26","semana":1,"ord":37,"keyword":"Qaed al fursan","tipo":"Lista","url":"https://www.paris.cl/listas/qaed-al-fursan/","texto":"Contenido SEO para «Qaed al fursan» · Lista. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"yara elixir lattafa","u":"https://www.paris.cl/listas/yara-elixir-lattafa/","p":"Failed."},{"a":"perfumes arabes","u":"https://www.paris.cl/belleza/perfumes/perfumes-arabes/","p":"Not Ranked (Top 10)."},{"a":"lattafa nebras elixir","u":"https://www.paris.cl/listas/lattafa-nebras-elixir/","p":"10.0"},{"a":"the kingdom lattafa","u":"https://www.paris.cl/listas/the-kingdom-lattafa/","p":"19.0"},{"a":"lattafa","u":"https://www.paris.cl/belleza/marcas/lattafa/","p":"19.0"},{"a":"perfumes lattafa yara","u":"https://www.paris.cl/listas/perfumes-lattafa-yara/","p":"Not Ranked (Top 30)."},{"a":"perfumes de mujer","u":"https://www.paris.cl/belleza/perfumes/mujer/","p":"4.0"},{"a":"perfumes arabe para primavera","u":"https://www.paris.cl/listas/perfumes-arabes-primavera/","p":"Not Ranked (Top 10)."},{"a":"perfumes para primavera","u":"https://www.paris.cl/listas/perfumes-florales-mujer/","p":"Not Ranked (Top 30)."},{"a":"","u":"","p":""}]},{"mes":"Octubre 26","semana":1,"ord":38,"keyword":"¿Cuáles son los mejores colchones para personas con dolor de espalda?","tipo":"Blog","url":"","texto":"Contenido SEO para «¿Cuáles son los mejores colchones para personas con dolor de espalda?» · Blog. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"colchon inflable","u":"https://www.paris.cl/listas/colchon-inflable/","p":""},{"a":"colchon 2 plaza","u":"https://www.paris.cl/dormitorio/colchones/2-plazas/","p":""},{"a":"cubre colchon / cubrecolchones","u":"https://www.paris.cl/dormitorio/ropa-cama/cubrecolchones/","p":""},{"a":"colchon 1 plaza","u":"https://www.paris.cl/dormitorio/colchones/1-plaza/","p":""},{"a":"colchones","u":"https://www.paris.cl/dormitorio/colchones/","p":""},{"a":"colchon ortopedico 2 plazas","u":"https://www.paris.cl/listas/colchon-ortopedico-2-plazas/","p":""},{"a":"","u":"","p":""},{"a":"","u":"","p":""},{"a":"","u":"","p":""},{"a":"","u":"","p":""}]},{"mes":"Octubre 26","semana":1,"ord":39,"keyword":"¿Como elegir un celulares con buena cámara?","tipo":"Blog","url":"","texto":"Contenido SEO para «¿Como elegir un celulares con buena cámara?» · Blog. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"iphone 18","u":"https://www.paris.cl/listas/iphone-18/","p":""},{"a":"samsung S26","u":"https://www.paris.cl/listas/samsung-s26/","p":""},{"a":"celulares","u":"https://www.paris.cl/tecnologia/celulares/","p":""},{"a":"smartphone","u":"https://www.paris.cl/tecnologia/celulares/smartphone/","p":""},{"a":"celulares xiaomi","u":"https://www.paris.cl/tecnologia/celulares/xiaomi/","p":""},{"a":"estabilizador de celular","u":"https://www.paris.cl/tecnologia/celulares/accesorios/soportes/","p":""},{"a":"iphone pro max","u":"https://www.paris.cl/listas/iphone-pro-max/","p":""},{"a":"","u":"","p":""},{"a":"","u":"","p":""},{"a":"","u":"","p":""}]},{"mes":"Octubre 26","semana":1,"ord":40,"keyword":"Top 5 audifonos con cancelación de ruido","tipo":"Blog","url":"","texto":"Contenido SEO para «Top 5 audifonos con cancelación de ruido» · Blog. Pégalo o edítalo aquí. Al marcar listo se asocia al consolidado.","listo":true,"status":"ok","comentarioRev":"","anchors":[{"a":"audifonos samsung","u":"https://www.paris.cl/tecno/audio/audifonos/samsung/","p":""},{"a":"audífonos sony","u":"https://www.paris.cl/electro/audio/audifonos/sony/","p":""},{"a":"audifonos inalámbricos","u":"https://www.paris.cl/electro/audio/audifonos-inalambricos/","p":""},{"a":"audifonos con cancelacion de ruido","u":"https://www.paris.cl/listas/audifonos-con-cancelacion-de-ruido/","p":""},{"a":"airpods","u":"https://www.paris.cl/listas/airpods/","p":""},{"a":"audifonos sennheiser","u":"https://www.paris.cl/electro/audio/audifonos/sennheiser/","p":""},{"a":"audífono jbl","u":"https://www.paris.cl/electro/audio/audifonos/jbl/","p":""},{"a":"","u":"","p":""},{"a":"","u":"","p":""},{"a":"","u":"","p":""}]}],"revision":[{"id":"r4978","anio":2026,"tipo":"PLP","keyword":"Ropa formal de hombre","url":"https://www.paris.cl/hombre/moda/ropa-formal/","voto":"","comentario":""},{"id":"r4979","anio":2026,"tipo":"PLP","keyword":"sombreros y gorros","url":"https://www.paris.cl/hombre/accesorios/sombreros-gorros/","voto":"","comentario":""},{"id":"r4980","anio":2026,"tipo":"PLP","keyword":"autos radiocontrolados","url":"https://www.paris.cl/jugueteria/autos-radiocontrolados/","voto":"","comentario":""},{"id":"r4981","anio":2026,"tipo":"PLP","keyword":"ropa infantil","url":"https://www.paris.cl/ninos/moda/","voto":"","comentario":""},{"id":"r4982","anio":2026,"tipo":"PLP","keyword":"poleras deportivas hombre","url":"https://www.paris.cl/deportes/hombre/poleras/","voto":"","comentario":""},{"id":"r4983","anio":2026,"tipo":"Listas","keyword":"crema noche","url":"https://www.paris.cl/listas/crema-noche/","voto":"","comentario":""},{"id":"r4984","anio":2026,"tipo":"Listas","keyword":"lightstick","url":"https://www.paris.cl/listas/lightstick/","voto":"","comentario":""},{"id":"r4985","anio":2026,"tipo":"Listas","keyword":"Retinal","url":"https://www.paris.cl/listas/retinal/","voto":"","comentario":""},{"id":"r4986","anio":2026,"tipo":"PLP","keyword":"Marcas Zapato Mujer","url":"https://www.paris.cl/zapatos/marcas-mujer/","voto":"","comentario":""},{"id":"r4987","anio":2026,"tipo":"Filtro","keyword":"Botas de agua mujer","url":"https://www.paris.cl/zapatos/mujer/botas-botines/botas-de-agua/","voto":"","comentario":""},{"id":"r4988","anio":2026,"tipo":"PLP","keyword":"Trajes tipicos","url":"https://www.paris.cl/jugueteria/didacticos-recreativos/trajes-tipicos/","voto":"","comentario":""},{"id":"r4989","anio":2026,"tipo":"PLP","keyword":"Set de maletas","url":"https://www.paris.cl/decohogar/maleteria/maletas/","voto":"","comentario":""},{"id":"r4990","anio":2026,"tipo":"PLP","keyword":"Maletas pequeñas","url":"https://www.paris.cl/decohogar/maleteria/pequenas/","voto":"","comentario":""},{"id":"r4991","anio":2026,"tipo":"PLP","keyword":"maletas grandes","url":"https://www.paris.cl/decohogar/maleteria/grandes/","voto":"","comentario":""},{"id":"r4992","anio":2026,"tipo":"PLP","keyword":"mochila de viaje","url":"https://www.paris.cl/decohogar/maleteria/mochilas-multiuso/","voto":"","comentario":""},{"id":"r4993","anio":2026,"tipo":"PLP","keyword":"Libreria","url":"https://www.paris.cl/decohogar/libreria/","voto":"","comentario":""},{"id":"r4994","anio":2026,"tipo":"Filtro","keyword":"camisas escolares","url":"https://www.paris.cl/ninos/mundo-escolar/uniformes/camisas/","voto":"","comentario":""},{"id":"r4995","anio":2026,"tipo":"PLP","keyword":"traje de baño mujer","url":"https://www.paris.cl/mujer/moda/trajes-bano/","voto":"","comentario":""},{"id":"r4996","anio":2026,"tipo":"PLP","keyword":"Niños","url":"https://www.paris.cl/ninos/","voto":"","comentario":""},{"id":"r4997","anio":2026,"tipo":"Filtro","keyword":"perfume hombre Montale","url":"https://www.paris.cl/belleza/perfumes/hombre/montale/","voto":"","comentario":""},{"id":"r4998","anio":2026,"tipo":"Filtro","keyword":"botas de agua hombre","url":"https://www.paris.cl/zapatos/hombre/botas-de-agua/","voto":"","comentario":""},{"id":"r4999","anio":2026,"tipo":"Filtro","keyword":"zapatillas under armour","url":"https://www.paris.cl/zapatos/zapatillas/under-armour/","voto":"","comentario":""},{"id":"r5000","anio":2026,"tipo":"PLP","keyword":"colchón cic","url":"https://www.paris.cl/dormitorio/colchones/cic/","voto":"","comentario":""},{"id":"r5001","anio":2026,"tipo":"Listas","keyword":"parlante jbl flip","url":"https://www.paris.cl/listas/parlante-jbl-flip/","voto":"","comentario":""},{"id":"r5002","anio":2026,"tipo":"Listas","keyword":"galaxy tab s10","url":"https://www.paris.cl/listas/galaxy-tab-s10/","voto":"","comentario":""},{"id":"r5003","anio":2026,"tipo":"Listas","keyword":"acer nitro","url":"https://www.paris.cl/listas/notebook-acer-nitro/","voto":"","comentario":""},{"id":"r5004","anio":2026,"tipo":"Listas","keyword":"iphone 15","url":"https://www.paris.cl/listas/iphone-15/","voto":"","comentario":""},{"id":"r5005","anio":2026,"tipo":"Listas","keyword":"samsung a57","url":"https://www.paris.cl/listas/samsung-a57/","voto":"","comentario":""},{"id":"r5006","anio":2026,"tipo":"Listas","keyword":"samsung a37","url":"https://www.paris.cl/listas/samsung-a37/","voto":"","comentario":""},{"id":"r5007","anio":2026,"tipo":"Listas","keyword":"Consolas R36S","url":"https://www.paris.cl/listas/consola-r36s/","voto":"","comentario":""},{"id":"r5008","anio":2026,"tipo":"PLP","keyword":"Zapatos de seguridad","url":"https://www.paris.cl/ferreteria/ropa-de-trabajo-proteccion/zapatos-de-seguridad/","voto":"","comentario":""},{"id":"r5009","anio":2026,"tipo":"Filtro","keyword":"Enchufes","url":"https://www.paris.cl/ferreteria/electricidad/enchufes/","voto":"","comentario":""},{"id":"r5010","anio":2026,"tipo":"PLP","keyword":"salud y equipamiento medico","url":"https://www.paris.cl/categorias/salud-equipamiento-medico/","voto":"","comentario":""},{"id":"r5011","anio":2026,"tipo":"Listas","keyword":"philips lumea","url":"https://www.paris.cl/listas/depiladora-laser-philips-lumea/","voto":"","comentario":""},{"id":"r5012","anio":2026,"tipo":"Listas","keyword":"Osoji","url":"https://www.paris.cl/listas/osoji/","voto":"","comentario":""},{"id":"r5013","anio":2026,"tipo":"Listas","keyword":"Extractor de leche","url":"https://www.paris.cl/listas/extractor-de-leche/","voto":"","comentario":""},{"id":"r5014","anio":2026,"tipo":"Lsitas","keyword":"Loncheras Bubba","url":"https://www.paris.cl/listas/loncheras-bubba/","voto":"","comentario":""},{"id":"r5015","anio":2026,"tipo":"Blog","keyword":"Dónde reciclar equipos electrónicos en Santiago","url":"https://www.paris.cl/sostenibilidad/iniciativas/tecno-circular/","voto":"","comentario":""},{"id":"r5016","anio":2026,"tipo":"Blog","keyword":"iPhone 18 y iPhone Duo: diferencias y novedades que debes conocer","url":"","voto":"","comentario":""},{"id":"r5017","anio":2026,"tipo":"Blog","keyword":"Guía para elegir perfumes para hombres jóvenes","url":"","voto":"","comentario":""}],"defaultMes":"Octubre 26","fuente":{"origen":"c:\\Users\\Josefa Ogalde\\Downloads\\Paris _ Consolidado contenidos 2.0.xlsx","modo":"seed+n8n","nota":"HTML liviano; datos completos vía n8n tras Google."}};
+    function sortHistorico(rows) {
+      return [...(rows || [])].map((r, i) => ({...r, _i: i})).sort((a, b) => {
+        const dy = (Number(b.anio) || 0) - (Number(a.anio) || 0);
+        if (dy) return dy;
+        return a._i - b._i;
+      }).map(({_i, ...r}) => r);
+    }
+    function sortContenidos(rows) {
+      const mesRank = {"Octubre 26":1,"Septiembre 26":2,"Agosto 26":3,"Julio 26":4,"Junio 26":5,"Mayo 26":6,"Abril 26":7,"Marzo 26":8,"Febrero 26":9,"Enero 26":10};
+      return [...(rows || [])].map((r, i) => ({...r, _i: i})).sort((a, b) => {
+        const ma = mesRank[a.mes] || 99, mb = mesRank[b.mes] || 99;
+        if (ma !== mb) return ma - mb;
+        const ds = (Number(b.semana) || 0) - (Number(a.semana) || 0);
+        if (ds) return ds;
+        return (Number(a.ord) || a._i) - (Number(b.ord) || b._i);
+      }).map(({_i, ...r}) => r);
+    }
+    const SHEETS = {
+      id: "1vi7G3kqyo2paIiEqimT1A57DsgxdzlpbG3p69_6TXiM",
+      histGid: "1739267264",
+      contenidosGid: "646469582",
+      histUrl: "https://docs.google.com/spreadsheets/d/1vi7G3kqyo2paIiEqimT1A57DsgxdzlpbG3p69_6TXiM/edit?gid=1739267264#gid=1739267264",
+      contenidosUrl: "https://docs.google.com/spreadsheets/d/1vi7G3kqyo2paIiEqimT1A57DsgxdzlpbG3p69_6TXiM/edit?gid=646469582#gid=646469582"
+    };
+    let HIST = sortHistorico(DATA.historico || []);
+    let ITEMS = sortContenidos(DATA.contenidos || []);
+    let REV = DATA.revision.map(r => ({...r, voto: r.voto || "", comentario: r.comentario || ""}));
+
+    // --- n8n sync (histórico + contenidos) ---
+    const N8N = {
+      hist: "https://grupomakingof.app.n8n.cloud/webhook/mova-sync-historico",
+      cont: "https://grupomakingof.app.n8n.cloud/webhook/mova-sync-contenidos"
+    };
+    function mapContenido(c) {
+      const it = Object.assign({}, c);
+      if (it.vbEditor !== "ok" && it.vbEditor !== "pendiente") it.vbEditor = "pendiente";
+      if (!Array.isArray(it.anchors)) it.anchors = Array.from({length:10}, () => ({a:"",u:"",p:""}));
+      while (it.anchors.length < 10) it.anchors.push({a:"",u:"",p:""});
+      return it;
+    }
+    async function movaSyncFromN8n() {
+      const tok = window.MOVA_TOKEN || "";
+      if (!tok) return { ok:false, motivo:"sin-token" };
+      const headers = { "Content-Type": "text/plain" };
+      const bodyHist = JSON.stringify({ token: tok, empresa: "REDACTORES", cliente: "paris" });
+      const bodyCont = JSON.stringify({ token: tok, empresa: "REDACTORES", cliente: "paris" });
+      try {
+        const [rh, rc] = await Promise.all([
+          fetch(N8N.hist, { method:"POST", cache:"no-store", headers, body: bodyHist }).then(r => r.json()).catch(() => null),
+          fetch(N8N.cont, { method:"POST", cache:"no-store", headers, body: bodyCont }).then(r => r.json()).catch(() => null)
+        ]);
+        const h = Array.isArray(rh) ? rh[0] : rh;
+        const c = Array.isArray(rc) ? rc[0] : rc;
+        if (h && h.ok && Array.isArray(h.historico) && h.historico.length) {
+          HIST = sortHistorico(h.historico);
+          try { renderHist(); } catch (e) {}
+        }
+        if (c && c.ok && Array.isArray(c.contenidos) && c.contenidos.length) {
+          ITEMS = sortContenidos(c.contenidos.map(mapContenido));
+          try {
+            const mesSel = document.getElementById("mes");
+            if (mesSel) {
+              const cur = mesSel.value;
+              const mesSet = [...new Set(ITEMS.map(i => i.mes).filter(mm => mm && mm !== "Semana revisión"))];
+              mesSel.innerHTML = mesSet.map(mm => `<option value="${mm}">${mm}</option>`).join("");
+              if (cur && mesSet.includes(cur)) mesSel.value = cur;
+              else if (c.defaultMes && mesSet.includes(c.defaultMes)) mesSel.value = c.defaultMes;
+              else if (mesSet[0]) mesSel.value = mesSet[0];
+            }
+            renderBlocks();
+          } catch (e) {}
+        }
+        return { ok:true, hist: (h && h.total) || 0, cont: (c && c.total) || ((c && c.contenidos)||[]).length };
+      } catch (e) {
+        return { ok:false, motivo: String(e && e.message || e) };
+      }
+    }
+    window.MOVA_PARIS_SYNC = movaSyncFromN8n;
+
+
+    let idx = 0;
+    let revisionDone = false;
+
+    // v4: sin «Semana revisión»; + visto bueno editor; texto HTML estructurado
+    const LS_REV = "mova-paris-rev-v4";
+    const LS_ITEMS = "mova-paris-items-from-rev-v4";
+    const LS_MEL = "mova-paris-mel-email";
+    const DEFAULT_MEL = "mmanzur@mkof.cl";
+
+    try {
+      // Descarta restos de pruebas viejas / mes artificial Semana revisión
+      try {
+        localStorage.removeItem("mova-paris-rev-v1");
+        localStorage.removeItem("mova-paris-rev-v2");
+        localStorage.removeItem("mova-paris-rev-v3");
+        localStorage.removeItem("mova-paris-items-from-rev-v1");
+        localStorage.removeItem("mova-paris-items-from-rev-v3");
+      } catch (e0) {}
+      const saved = JSON.parse(localStorage.getItem(LS_REV) || "null");
+      if (saved && Array.isArray(saved.rows) && saved.rows.length === REV.length) {
+        const byId = Object.fromEntries(saved.rows.map(r => [r.id, r]));
+        REV = REV.map(r => {
+          const s = byId[r.id];
+          if (!s) return r;
+          return {
+            ...r,
+            voto: s.voto || "",
+            comentario: s.comentario || "",
+            keyword: s.keyword != null ? s.keyword : r.keyword,
+            url: s.url != null ? s.url : r.url
+          };
+        });
+        revisionDone = !!saved.done;
+      }
+      const melSaved = localStorage.getItem(LS_MEL);
+      document.getElementById("melEmail").value = melSaved || DEFAULT_MEL;
+      const fromRev = JSON.parse(localStorage.getItem(LS_ITEMS) || "null");
+      if (fromRev && Array.isArray(fromRev) && fromRev.length) {
+        const keys = new Set(ITEMS.map(i => (i.keyword||"").toLowerCase()+"|"+(i.url||"")));
+        const extras = fromRev.filter(i => !keys.has((i.keyword||"").toLowerCase()+"|"+(i.url||"")));
+        ITEMS = extras.concat(ITEMS);
+      }
+    } catch (e) {}
+
+    const mesSel = document.getElementById("mes");
+    const blocksEl = document.getElementById("blocks");
+    const revBody = document.getElementById("revBody");
+    const defMes = DATA.defaultMes || "Octubre 26";
+
+    // Normaliza ítems: quita mes artificial y asegura VB editor
+    ITEMS.forEach(it => {
+      if (it.mes === "Semana revisión") {
+        it.mes = defMes;
+        if (!it.semana) it.semana = 1;
+      }
+      if (it.vbEditor !== "ok" && it.vbEditor !== "pendiente") it.vbEditor = "pendiente";
+    });
+
+    // Meses del consolidado en orden (más reciente primero). Solo mes real + Semana 1–4.
+    const mesPrefer = ["Octubre 26","Septiembre 26","Agosto 26","Julio 26","Junio 26","Mayo 26","Abril 26","Marzo 26","Febrero 26","Enero 26"];
+    const mesSet = [...new Set(ITEMS.map(i => i.mes).filter(m => m && m !== "Semana revisión"))];
+    const mesOrdered = [
+      ...mesPrefer.filter(m => mesSet.includes(m)),
+      ...mesSet.filter(m => !mesPrefer.includes(m)),
+    ];
+    mesOrdered.forEach(m => {
+      const o = document.createElement("option"); o.value = m; o.textContent = m; mesSel.appendChild(o);
+    });
+    mesSel.value = [...mesSel.options].some(o => o.value === defMes) ? defMes : (mesSel.options[0] ? mesSel.options[0].value : "");
+
+    /* ---- Nav: pasos independientes (revisión ↔ redacción) ---- */
+    function syncNavLock() {
+      const btn = document.getElementById("navRedaccion");
+      if (!btn) return;
+      btn.disabled = false;
+      btn.title = "";
+    }
+    document.querySelectorAll(".nav button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        goView(btn.dataset.view);
+      });
+    });
+    function goView(name) {
+      document.querySelectorAll(".nav button").forEach(b => b.classList.toggle("active", b.dataset.view === name));
+      document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === "view-" + name));
+      const crumb = document.getElementById("crumbStep");
+      if (crumb) crumb.textContent = name === "redaccion" ? "2 · Redacción" : "1 · Revisión";
+      if (name === "redaccion") {
+        try { history.replaceState(null, "", "#redaccion"); } catch (e) {}
+      } else if (name === "revision") {
+        try { history.replaceState(null, "", "#revision"); } catch (e) {}
+      }
+      syncNavLock();
+    }
+
+
+    function cellText(el) {
+      return String((el && el.textContent) || "").replace(/\u00a0/g, " ").trim();
+    }
+
+    const pairSel = { active: false, start: -1, end: -1, mode: "pair" };
+
+    function listPairRows() {
+      const rows = [];
+      blocksEl.querySelectorAll(".block").forEach(block => {
+        const itemI = Number(block.getAttribute("data-i"));
+        for (let n = 0; n < 10; n++) {
+          const anc = block.querySelector(`.anc-cell[data-a="${n}"]`);
+          const url = block.querySelector(`.url-cell[data-u="${n}"]`);
+          if (!anc || !url) continue;
+          rows.push({ itemI, n, anc, url, block });
+        }
+      });
+      return rows;
+    }
+
+    function clearPairHighlight() {
+      if (!blocksEl) return;
+      blocksEl.querySelectorAll(".anc-cell.col-hi,.url-cell.col-hi,.anc-cell.pair-hi,.url-cell.pair-hi").forEach(c => {
+        c.classList.remove("col-hi", "pair-hi");
+      });
+    }
+
+    function applyPairHighlight() {
+      clearPairHighlight();
+      if (pairSel.start < 0 || pairSel.end < 0) return;
+      const rows = listPairRows();
+      const a = Math.min(pairSel.start, pairSel.end);
+      const b = Math.max(pairSel.start, pairSel.end);
+      for (let i = a; i <= b && i < rows.length; i++) {
+        const r = rows[i];
+        if (pairSel.mode === "anc") r.anc.classList.add("col-hi", "pair-hi");
+        else if (pairSel.mode === "url") r.url.classList.add("col-hi", "pair-hi");
+        else {
+          r.anc.classList.add("col-hi", "pair-hi");
+          r.url.classList.add("col-hi", "pair-hi");
+        }
+      }
+    }
+
+    function selectedPairsText() {
+      if (pairSel.start < 0 || pairSel.end < 0) return "";
+      const rows = listPairRows();
+      const a = Math.min(pairSel.start, pairSel.end);
+      const b = Math.max(pairSel.start, pairSel.end);
+      const lines = [];
+      for (let i = a; i <= b && i < rows.length; i++) {
+        const r = rows[i];
+        const av = cellText(r.anc);
+        const uv = cellText(r.url);
+        if (pairSel.mode === "anc") lines.push(av);
+        else if (pairSel.mode === "url") lines.push(uv);
+        else lines.push(av + "\t" + uv);
+      }
+      return lines.join("\n");
+    }
+
+    function copySelectedPairs(msg) {
+      const text = selectedPairsText();
+      if (!text.trim()) {
+        alert("Selecciona Anchor y/o URL arrastrando en la grilla (puedes cruzar semanas).");
+        return "";
+      }
+      const n = text.split("\n").length;
+      copyText(text, msg || (n + " filas Anchor+URL copiadas"));
+      return text;
+    }
+
+    function rowIndexFromCell(el) {
+      const rows = listPairRows();
+      const block = el.closest(".block");
+      if (!block) return -1;
+      const itemI = Number(block.getAttribute("data-i"));
+      const n = el.hasAttribute("data-a") ? Number(el.getAttribute("data-a")) : Number(el.getAttribute("data-u"));
+      return rows.findIndex(r => r.itemI === itemI && r.n === n);
+    }
+
+    function selectColumnCells(block, kind) {
+      const rows = listPairRows();
+      const itemI = Number(block.getAttribute("data-i"));
+      const idxs = rows.map((r, i) => (r.itemI === itemI ? i : -1)).filter(i => i >= 0);
+      if (!idxs.length) return "";
+      pairSel.mode = kind === "anc" ? "anc" : (kind === "url" ? "url" : "pair");
+      const ev = window.event;
+      if (ev && ev.shiftKey && pairSel.start >= 0) pairSel.end = idxs[idxs.length - 1];
+      else { pairSel.start = idxs[0]; pairSel.end = idxs[idxs.length - 1]; }
+      applyPairHighlight();
+      const text = selectedPairsText();
+      const toast = document.getElementById("toast");
+      if (toast) {
+        const label = pairSel.mode === "anc" ? "Anchors" : pairSel.mode === "url" ? "URLs" : "Anchor+URL";
+        toast.textContent = label + " (" + text.split("\n").filter(Boolean).length + ") — Ctrl/Cmd+C o Copiar selección";
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2200);
+      }
+      return text;
+    }
+
+    function bindPairSelection() {
+      blocksEl.addEventListener("mousedown", e => {
+        const cell = e.target.closest(".anc-cell,.url-cell");
+        if (!cell || !blocksEl.contains(cell)) return;
+        if (cell.getAttribute("contenteditable") === "true") return;
+        e.preventDefault();
+        const idxRow = rowIndexFromCell(cell);
+        if (idxRow < 0) return;
+        pairSel.active = true;
+        pairSel.mode = "pair";
+        if (e.shiftKey && pairSel.start >= 0) pairSel.end = idxRow;
+        else { pairSel.start = idxRow; pairSel.end = idxRow; }
+        blocksEl.classList.add("sel-dragging");
+        applyPairHighlight();
+      });
+      document.addEventListener("mousemove", e => {
+        if (!pairSel.active) return;
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const cell = el && el.closest && el.closest(".anc-cell,.url-cell");
+        if (!cell || !blocksEl.contains(cell)) return;
+        const idxRow = rowIndexFromCell(cell);
+        if (idxRow < 0 || idxRow === pairSel.end) return;
+        pairSel.end = idxRow;
+        applyPairHighlight();
+      });
+      document.addEventListener("mouseup", () => {
+        if (!pairSel.active) return;
+        pairSel.active = false;
+        blocksEl.classList.remove("sel-dragging");
+      });
+    }
+
+    document.addEventListener("keydown", e => {
+      const key = (e.key || "").toLowerCase();
+      if (!(e.ctrlKey || e.metaKey) || key !== "c") return;
+      if (pairSel.start < 0 || pairSel.end < 0 || !selectedPairsText().trim()) return;
+      const t = e.target;
+      if (t && t.closest && t.closest("#textoBody,input,textarea,select")) return;
+      if (t && t.closest && t.closest("[contenteditable=true]") && !t.closest(".anc-cell,.url-cell")) return;
+      e.preventDefault();
+      copySelectedPairs();
+    });
+
+    function esc(s) {
+      return String(s ?? "").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+    }
+
+    function normalizeTipo(t) {
+      const x = (t || "PLP").trim();
+      if (/^list/i.test(x)) return "Lista";
+      if (/^filt/i.test(x)) return "Filtro";
+      if (/^blog/i.test(x)) return "Blog";
+      if (/^land/i.test(x)) return "Landing";
+      if (/^search/i.test(x)) return "Search";
+      if (/^plp/i.test(x)) return "PLP";
+      return ["PLP","Filtro","Lista","Blog","Landing","Search"].includes(x) ? x : "PLP";
+    }
+
+    /* ---- Revisión ---- */
+    function persistRev() {
+      localStorage.setItem(LS_REV, JSON.stringify({
+        done: revisionDone,
+        rows: REV.map(r => ({
+          id: r.id,
+          voto: r.voto,
+          comentario: r.comentario,
+          keyword: r.keyword,
+          url: r.url
+        }))
+      }));
+    }
+
+    function revCounts() {
+      const total = REV.length;
+      const rev = REV.filter(r => r.voto === "vb" || r.voto === "x").length;
+      const vb = REV.filter(r => r.voto === "vb").length;
+      const x = REV.filter(r => r.voto === "x").length;
+      const xSinCom = REV.filter(r => r.voto === "x" && !(r.comentario||"").trim()).length;
+      return {total, rev, vb, x, xSinCom};
+    }
+
+    function updateRevStats() {
+      const c = revCounts();
+      const btn = document.getElementById("btnListoRev");
+      const allOk = c.rev === c.total && c.total > 0;
+      const xNeedComment = c.xSinCom > 0;
+      btn.disabled = !allOk || xNeedComment || revisionDone;
+      btn.textContent = revisionDone ? "enviado" : "listo";
+      btn.title = xNeedComment
+        ? `Hay ${c.xSinCom} fila(s) con X sin comentario. Completa el porqué para habilitar listo.`
+        : (!allOk ? "Revisa las 40 (VB o X) para habilitar listo." : "Enviar observaciones y pasar a Redacción");
+      const hint = document.getElementById("needComHint");
+      if (hint) {
+        hint.hidden = !xNeedComment || revisionDone;
+        hint.textContent = xNeedComment
+          ? `Faltan ${c.xSinCom} comentario(s)`
+          : "";
+      }
+      revBody.querySelectorAll("tr[data-i]").forEach(tr => {
+        const i = Number(tr.dataset.i);
+        const miss = REV[i] && REV[i].voto === "x" && !(REV[i].comentario||"").trim();
+        tr.classList.toggle("row-x-miss", !!miss);
+      });
+    }
+
+    function startCellEdit(span, field, i) {
+      if (revisionDone || !span || span.querySelector(".rev-edit")) return;
+      const cur = field === "keyword" ? (REV[i].keyword || "") : (REV[i].url || "");
+      const ta = document.createElement("textarea");
+      ta.className = "rev-edit";
+      ta.value = cur === "—" ? "" : cur;
+      ta.rows = Math.min(4, Math.max(2, Math.ceil((cur.length || 20) / 40)));
+      span.replaceWith(ta);
+      ta.focus();
+      ta.select();
+      const commit = () => {
+        const val = ta.value.trim();
+        if (field === "keyword") {
+          if (!val) { alert("La keyword no puede quedar vacía."); ta.focus(); return; }
+          REV[i].keyword = val;
+        } else {
+          REV[i].url = val;
+        }
+        persistRev();
+        renderRev();
+      };
+      ta.addEventListener("blur", () => setTimeout(commit, 0));
+      ta.addEventListener("keydown", e => {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ta.blur(); }
+        if (e.key === "Escape") { renderRev(); }
+      });
+    }
+
+    function renderRev() {
+      revBody.innerHTML = REV.map((r, i) => {
+        const miss = r.voto === "x" && !(r.comentario||"").trim();
+        const rowCls = [
+          r.voto === "vb" ? "row-vb" : "",
+          r.voto === "x" ? "row-x" : "",
+          miss ? "row-x-miss" : ""
+        ].filter(Boolean).join(" ");
+        return `
+        <tr class="${rowCls}" data-i="${i}">
+          <td style="text-align:center;color:var(--muted)">${i+1}</td>
+          <td>${esc(r.anio)}</td>
+          <td>${esc(r.tipo || "—")}</td>
+          <td class="cell-kw"><span class="rev-kw" data-edit="keyword" title="Doble clic para editar">${esc(r.keyword)}</span></td>
+          <td><span class="rev-url" data-edit="url" title="Doble clic para editar">${esc(r.url || "—")}</span></td>
+          <td>
+            <div class="voto">
+              <button type="button" title="VB" data-voto="vb" class="${r.voto==="vb"?"on-vb":""}">✓</button>
+              <button type="button" title="Modificación" data-voto="x" class="${r.voto==="x"?"on-x":""}">✕</button>
+            </div>
+          </td>
+          <td>
+            <textarea data-com ${r.voto==="x"?"required":""} placeholder="${r.voto==="x"?"Obligatorio: ¿por qué X?":"Comentario (opcional)"}">${esc(r.comentario)}</textarea>
+          </td>
+        </tr>`;
+      }).join("");
+
+      revBody.querySelectorAll(".voto button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (revisionDone) return;
+          const tr = btn.closest("tr");
+          const i = Number(tr.dataset.i);
+          const v = btn.dataset.voto;
+          REV[i].voto = REV[i].voto === v ? "" : v;
+          persistRev();
+          renderRev();
+          if (REV[i].voto === "x") {
+            const ta = revBody.querySelector(`tr[data-i="${i}"] textarea[data-com]`);
+            if (ta) { ta.focus(); ta.placeholder = "Obligatorio: ¿por qué X?"; }
+          }
+        });
+      });
+      revBody.querySelectorAll("textarea[data-com]").forEach(ta => {
+        ta.addEventListener("input", () => {
+          if (revisionDone) return;
+          const i = Number(ta.closest("tr").dataset.i);
+          REV[i].comentario = ta.value;
+          persistRev();
+          updateRevStats();
+        });
+      });
+      revBody.querySelectorAll("[data-edit]").forEach(span => {
+        span.addEventListener("dblclick", e => {
+          e.preventDefault();
+          const i = Number(span.closest("tr").dataset.i);
+          startCellEdit(span, span.dataset.edit, i);
+        });
+      });
+      updateRevStats();
+    }
+
+    function buildObsEmailBody(mods) {
+      const lines = [
+        "Hola,",
+        "",
+        "Correcciones del paso 1 · Portal redactor de Paris.",
+        "Keywords / URLs a modificar:",
+        ""
+      ];
+      mods.forEach((r, i) => {
+        lines.push((i + 1) + ")");
+        lines.push("Keyword: " + r.keyword);
+        lines.push("URL: " + (r.url || "(sin URL)"));
+        lines.push("Comentario: " + ((r.comentario || "").trim() || "—"));
+        lines.push("");
+      });
+      lines.push("Saludos,");
+      lines.push("Portal Redactores MOVA · Paris");
+      return lines.join("\n");
+    }
+
+    // Webhook Make (opcional). Si está vacío, se usa FormSubmit al correo destino.
+    const MAKE_WEBHOOK_URL = localStorage.getItem("mova_mail_webhook") || "";
+
+    async function sendObsEmail(mods, toEmail) {
+      const subject = "Paris · Correcciones keywords/URLs (" + mods.length + ")";
+      const body = buildObsEmailBody(mods);
+      const payload = {
+        to: toEmail,
+        subject,
+        message: body,
+        body,
+        cliente: "Paris",
+        origen: "portal-redactores-paris",
+        paso: "1-revision",
+        items: mods.map(r => ({
+          keyword: r.keyword,
+          url: r.url || "",
+          comentario: (r.comentario || "").trim(),
+          tipo: r.tipo || "",
+          anio: r.anio
+        }))
+      };
+      try {
+        if (MAKE_WEBHOOK_URL) {
+          await fetch(MAKE_WEBHOOK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          return true;
+        }
+        const res = await fetch("https://formsubmit.co/ajax/" + encodeURIComponent(toEmail), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            _subject: subject,
+            message: body,
+            _template: "table",
+            _captcha: "false"
+          })
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return true;
+      } catch (err) {
+        console.error(err);
+        try { await navigator.clipboard.writeText(body); } catch (e) {}
+        alert("No se pudo enviar el correo automático. El texto quedó copiado al portapapeles para reenviarlo.");
+        return false;
+      }
+    }
+
+    function persistItemsFromRev() {
+      const batch = ITEMS.filter(it => it.fromRevision);
+      localStorage.setItem(LS_ITEMS, JSON.stringify(batch));
+    }
+
+    function isBlocked(it) {
+      return it && it.status === "pendiente";
+    }
+
+    function applyCorrectionToItem(i, newKw, newUrl) {
+      const it = ITEMS[i];
+      if (!it || !isBlocked(it)) return false;
+      const kw = (newKw || "").trim();
+      const url = (newUrl || "").trim();
+      if (!kw) return false;
+      it.keywordOrig = it.keywordOrig || it.keyword;
+      it.urlOrig = it.urlOrig != null ? it.urlOrig : (it.url || "");
+      it.keyword = kw;
+      it.url = url;
+      it.status = "ok";
+      it.comentarioRev = it.comentarioRev || "";
+      return true;
+    }
+
+    function unlockMel(i) {
+      const root = blockRoot(i);
+      const it = ITEMS[i];
+      if (!it || !isBlocked(it)) return;
+      const kwEl = root && root.querySelector("[data-f=keyword]");
+      const urlEl = root && root.querySelector("[data-f=url]");
+      const kw = kwEl ? kwEl.value.trim() : it.keyword;
+      const url = urlEl ? urlEl.value.trim() : (it.url || "");
+      if (!kw) {
+        alert("Ingresa la keyword corregida antes de aplicar.");
+        return;
+      }
+      applyCorrectionToItem(i, kw, url);
+      persistItemsFromRev();
+      const s = document.getElementById("status");
+      s.className = "status show";
+      s.textContent = `Corrección aplicada y sobrescrita: «${it.keyword}». Ya se puede redactar.`;
+      document.getElementById("fStatus").value = "ok";
+      idx = i;
+      renderBlocks();
+    }
+
+    function pushToRedaccion() {
+      const mesName = defMes;
+      const semSel = document.getElementById("semana").value;
+      const semana = Number(semSel) || 1;
+      const nuevos = REV.map((r, i) => ({
+        mes: mesName,
+        semana: semana,
+        keyword: r.keyword,
+        keywordOrig: r.keyword,
+        tipo: normalizeTipo(r.tipo),
+        url: r.url || "",
+        urlOrig: r.url || "",
+        texto: "",
+        listo: false,
+        status: r.voto === "x" ? "pendiente" : "ok",
+        vbEditor: "pendiente",
+        comentarioRev: r.comentario || "",
+        fromRevision: true,
+        anchors: Array.from({length:10}, () => ({a:"", u:"", p:""})),
+        _ord: i
+      }));
+      // Quita batch anterior de revisión y agrega el nuevo al inicio
+      ITEMS = nuevos.concat(ITEMS.filter(it => !it.fromRevision));
+      persistItemsFromRev();
+      if (![...mesSel.options].some(o => o.value === mesName)) {
+        const o = document.createElement("option");
+        o.value = mesName; o.textContent = mesName;
+        mesSel.insertBefore(o, mesSel.firstChild);
+      }
+      mesSel.value = mesName;
+      if (semSel) document.getElementById("semana").value = String(semana);
+      // Por defecto solo las con VB (editables); las X quedan bloqueadas
+      document.getElementById("fStatus").value = "ok";
+      idx = null;
+      renderBlocks();
+    }
+
+    document.getElementById("btnAllVb").addEventListener("click", () => {
+      REV.forEach(r => { r.voto = "vb"; });
+      persistRev();
+      updateRevStats();
+      renderRev();
+      const s = document.getElementById("statusRev");
+      s.className = "status show";
+      s.textContent = "Las 40 quedaron con VB. Puedes cambiar filas una a una.";
+    });
+    document.getElementById("btnClearVotes").addEventListener("click", () => {
+      REV.forEach(r => { r.voto = ""; r.comentario = ""; });
+      revisionDone = false;
+      persistRev();
+      updateRevStats();
+      syncNavLock();
+      renderRev();
+    });
+    document.getElementById("btnListoRev").addEventListener("click", async () => {
+      const c = revCounts();
+      if (c.rev !== c.total) {
+        alert("Debes revisar las 40 keywords/URLs (VB o X) antes de presionar listo.");
+        return;
+      }
+      const sinCom = REV.filter(r => r.voto === "x" && !(r.comentario||"").trim());
+      if (sinCom.length) {
+        alert(`Hay ${sinCom.length} fila(s) con X sin comentario del porqué. Completa esos comentarios para poder dar listo.`);
+        const first = REV.findIndex(r => r.voto === "x" && !(r.comentario||"").trim());
+        const ta = first >= 0 && revBody.querySelector(`tr[data-i="${first}"] textarea[data-com]`);
+        if (ta) { ta.focus(); ta.scrollIntoView({behavior:"smooth", block:"center"}); }
+        return;
+      }
+      const mel = document.getElementById("melEmail").value.trim() || DEFAULT_MEL;
+      localStorage.setItem(LS_MEL, mel);
+      const mods = REV.filter(r => r.voto === "x");
+
+      // Primero deja las 40 en Redacción; después envía el correo (sin abrir el cliente)
+      pushToRedaccion();
+      revisionDone = true;
+      persistRev();
+      updateRevStats();
+
+      let mailOk = true;
+      if (mods.length) {
+        mailOk = await sendObsEmail(mods, mel);
+      }
+
+      const s = document.getElementById("statusRev");
+      s.className = "status show" + (mods.length ? " warn" : "");
+      s.textContent = mods.length
+        ? (mailOk
+          ? `Listo. Correo enviado a ${mel} con ${mods.length} corrección(es). Pasas a Redacción.`
+          : `Listo. Pasas a Redacción. El correo no se envió; revisa el portapapeles.`)
+        : "Listo. Pasas a Redacción.";
+      syncNavLock();
+      goView("redaccion");
+      if (mods.length) document.getElementById("fStatus").value = "pendiente";
+    });
+
+    document.getElementById("melEmail").addEventListener("change", e => {
+      localStorage.setItem(LS_MEL, e.target.value.trim() || DEFAULT_MEL);
+    });
+
+    /* ---- Redacción ---- */
+    function semClass(n) {
+      const s = Math.max(1, Math.min(5, Number(n) || 1));
+      return `sem sem-${s}`;
+    }
+
+    function cleanPos(p) {
+      return String(p ?? "").replace(/\s*\([^)]*\)/g, "").replace(/\s*\([^)]*$/g, "").trim();
+    }
+
+    function filteredItems() {
+      const q = document.getElementById("q").value.trim().toLowerCase();
+      const mes = mesSel.value;
+      const sem = document.getElementById("semana").value;
+      const st = document.getElementById("fStatus").value;
+      const vb = document.getElementById("fVbEditor").value;
+      return ITEMS.map((it, i) => ({...it, _i:i})).filter(it => {
+        if (mes && it.mes !== mes) return false;
+        if (sem && String(it.semana) !== sem) return false;
+        if (st && (it.status || "ok") !== st) return false;
+        if (vb && (it.vbEditor || "pendiente") !== vb) return false;
+        if (q && !(it.keyword.toLowerCase().includes(q) || (it.url||"").toLowerCase().includes(q))) return false;
+        return true;
+      }).sort((a, b) => {
+        // Semana más actual arriba; dentro de la semana, mismo orden del consolidado
+        const ds = (Number(b.semana) || 0) - (Number(a.semana) || 0);
+        if (ds) return ds;
+        return (Number(a.ord) || a._i) - (Number(b.ord) || b._i);
+      });
+    }
+
+    function blockRoot(i) {
+      return blocksEl.querySelector(`.block[data-i="${i}"]`);
+    }
+
+    function setActive(i) {
+      idx = i;
+      blocksEl.querySelectorAll(".block").forEach(b => b.classList.toggle("active", Number(b.dataset.i) === i));
+      syncTextoHead();
+    }
+
+    function readBlockToItem(i) {
+      const root = blockRoot(i);
+      if (!root || !ITEMS[i]) return;
+      const it = ITEMS[i];
+      const semEl = root.querySelector("[data-f=semana]");
+      const kwEl = root.querySelector("[data-f=keyword]");
+      const tipoEl = root.querySelector("[data-f=tipo]");
+      const urlEl = root.querySelector("[data-f=url]");
+      if (!kwEl) return;
+      it.semana = Number(semEl.value) || 1;
+      it.keyword = kwEl.value.trim();
+      it.tipo = tipoEl.value;
+      it.url = urlEl.value.trim();
+      it.anchors = [...Array(10)].map((_, n) => {
+        const posTd = root.querySelector(`.pos-cell[data-item="${i}"][data-n="${n}"]`);
+        return {
+          a: cellText(root.querySelector(`[data-a="${n}"]`)),
+          u: cellText(root.querySelector(`[data-u="${n}"]`)),
+          p: cleanPos(posTd ? posTd.textContent : "")
+        };
+      });
+    }
+
+    function readSheetToItem() {
+      if (idx == null) return;
+      readBlockToItem(idx);
+    }
+
+    function fallbackCopy(text, done) {
+      const ta = document.createElement("textarea");
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(ta);
+      if (done) done();
+    }
+
+    function copyText(text, msg) {
+      const done = () => {
+        const toast = document.getElementById("toast");
+        toast.textContent = msg;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2000);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+      } else fallbackCopy(text, done);
+    }
+
+    function syncPosFromDom() {
+      blocksEl.querySelectorAll(".pos-cell").forEach(td => {
+        const i = Number(td.dataset.item);
+        const n = Number(td.dataset.n);
+        if (!ITEMS[i]) return;
+        if (!ITEMS[i].anchors) ITEMS[i].anchors = Array.from({length:10},()=>({a:"",u:"",p:""}));
+        while (ITEMS[i].anchors.length < 10) ITEMS[i].anchors.push({a:"",u:"",p:""});
+        ITEMS[i].anchors[n].p = cleanPos(td.textContent || "");
+      });
+    }
+
+    function collectAllPositions() {
+      syncPosFromDom();
+      filteredItems().forEach(it => readBlockToItem(it._i));
+      const lines = [];
+      filteredItems().forEach(it => {
+        for (let n = 0; n < 10; n++) {
+          const raw = (ITEMS[it._i].anchors && ITEMS[it._i].anchors[n] && ITEMS[it._i].anchors[n].p) || "";
+          lines.push(cleanPos(raw));
+        }
+      });
+      return lines;
+    }
+
+    function copyAllPositions() {
+      const lines = collectAllPositions();
+      if (!lines.length) {
+        alert("No hay posiciones visibles para copiar.");
+        return;
+      }
+      copyText(lines.join("\n"), `${lines.length} posiciones copiadas`);
+    }
+
+    function copyPositions(i) {
+      if (isBlocked(ITEMS[i])) {
+        alert("Este contenido está pendiente.");
+        return;
+      }
+      readBlockToItem(i);
+      syncPosFromDom();
+      const it = ITEMS[i];
+      const lines = [...Array(10)].map((_, n) => cleanPos((it.anchors && it.anchors[n] && it.anchors[n].p) || ""));
+      copyText(lines.join("\n"), "10 posiciones copiadas");
+    }
+
+    function renderBlockHtml(it) {
+      const i = it._i;
+      const tipoOpts = ["PLP","Filtro","Lista","Blog","Landing","Search"]
+        .map(t => `<option ${normalizeTipo(it.tipo)===t?"selected":""}>${t}</option>`).join("");
+      const textoLabel = (it.texto||"").trim() ? "Texto cargado" : "Sin texto";
+      const pend = isBlocked(it);
+      const dis = pend ? "disabled" : "";
+      const disMel = "";
+      const chip = pend
+        ? `<span class="st-pill pend">Pendiente</span>`
+        : (it.listo ? `<span class="st-pill ok">Listo</span>` : (it.fromRevision ? `<span class="st-pill ok">VB</span>` : ""));
+      const estatusPill = pend
+        ? `<span class="st-pill pend">Pendiente</span>`
+        : (it.listo ? `<span class="st-pill ok">Listo</span>` : `<span class="st-pill" style="background:rgba(255,255,255,.08);color:var(--muted)">En curso</span>`);
+      const vbVal = (it.vbEditor === "ok") ? "ok" : "pendiente";
+      const vbSelect = `<select data-f="vbEditor" class="vb-sel" ${dis} title="Visto bueno editor">
+            <option value="pendiente" ${vbVal==="pendiente"?"selected":""}>Pendiente</option>
+            <option value="ok" ${vbVal==="ok"?"selected":""}>OK</option>
+          </select>`;
+      const lockBanner = pend ? `
+        <div class="lock-banner">
+          <span>Pendiente${it.comentarioRev ? ": " + esc(it.comentarioRev) : ""}</span>
+          <button type="button" class="btn btn-ok" data-act="mel-vb">Aplicar corrección</button>
+        </div>` : "";
+      let rows = "";
+      for (let n = 0; n < 10; n++) {
+        const a = (it.anchors && it.anchors[n]) || {a:"",u:"",p:""};
+        const posVal = cleanPos(a.p || "");
+        const failed = /failed/i.test(String(a.p || ""));
+        rows += `<tr class="${pend?"row-pendiente":""}" data-row-item="${i}">`;
+        if (n === 0) {
+          rows += `<td class="cell-span" rowspan="10" style="text-align:center;vertical-align:middle">
+            <span class="${semClass(it.semana)}">Sem ${it.semana||1}</span>
+            <input data-f="semana" type="hidden" value="${it.semana||1}" />
+          </td>`;
+          rows += `<td class="cell-kw" rowspan="10"><input data-f="keyword" value="${esc(it.keyword||"")}" ${pend?disMel:dis} /></td>`;
+          rows += `<td class="cell-span" rowspan="10"><select data-f="tipo" ${dis}>${tipoOpts}</select></td>`;
+          rows += `<td class="cell-span" rowspan="10"><input data-f="url" value="${esc(it.url||"")}" ${pend?disMel:dis} /></td>`;
+        }
+        rows += `<td class="anc-cell" data-a="${n}" contenteditable="false" spellcheck="false">${esc(a.a||"")}</td>`;
+        rows += `<td class="url-cell" data-u="${n}" contenteditable="false" spellcheck="false">${esc(a.u||"")}</td>`;
+        rows += `<td class="pos-cell${failed?" failed":""}" data-item="${i}" data-n="${n}" contenteditable="${pend?"false":"true"}" spellcheck="false">${esc(posVal)}</td>`;
+        if (n === 0) {
+          rows += `<td class="cell-span est-cell no-select" rowspan="10">${estatusPill}</td>`;
+          rows += `<td class="cell-span vb-cell no-select" rowspan="10" style="text-align:center;vertical-align:middle">${vbSelect}</td>`;
+          rows += `<td class="cell-span no-select" rowspan="10" style="text-align:center">
+            <div style="font-size:.65rem;color:var(--muted);margin-bottom:.35rem" data-texto-flag>${textoLabel}</div>
+            <button type="button" class="btn btn-ghost" data-act="texto" style="width:100%;margin-bottom:.35rem" ${dis}>texto</button>
+            <button type="button" class="btn btn-ok" data-act="listo" style="width:100%" ${dis}>listo</button>
+          </td>`;
+        }
+        rows += "</tr>";
+      }
+      return `<div class="block ${idx===i?"active":""} ${pend?"locked":""}" data-i="${i}">
+        <div class="block-bar">
+          <div class="title">
+            <span>${esc(it.keyword||"sin keyword")}</span>
+            ${chip}
+          </div>
+        </div>
+        ${lockBanner}
+        <table class="sheet excel">
+          <colgroup>
+            <col class="c-sem" /><col class="c-kw" /><col class="c-tipo" /><col class="c-url" />
+            <col class="c-anc" /><col class="c-iu" /><col class="c-pos" /><col class="c-est" /><col class="c-vb" /><col class="c-txt" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Semana</th><th>Keyword</th><th>Tipo</th><th>Url</th>
+              <th class="col-selectable" data-col-sel="anc" title="Clic: seleccionar todos los anchors">Anchor</th><th class="col-selectable" data-col-sel="url" title="Clic: seleccionar todas las URLs">URLs interlinking</th><th>Posición</th><th class="no-select">Estatus</th><th class="no-select">VB editor</th><th class="no-select">Texto</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    }
+
+    function renderBlocks() {
+      pairSel.active = false; pairSel.start = -1; pairSel.end = -1;
+      clearPairHighlight();
+      const rows = filteredItems();
+      if (!rows.length) {
+        blocksEl.innerHTML = `<div class="empty">Sin contenidos</div>`;
+        idx = null;
+        return;
+      }
+      if (idx == null || !rows.some(r => r._i === idx)) idx = rows[0]._i;
+      blocksEl.innerHTML = rows.map(renderBlockHtml).join("");
+      blocksEl.querySelectorAll(".block").forEach(block => {
+        const i = Number(block.dataset.i);
+        const blocked = isBlocked(ITEMS[i]);
+        block.addEventListener("focusin", () => setActive(i));
+        block.addEventListener("click", () => setActive(i));
+        if (!blocked) {
+          block.querySelectorAll("[data-f]").forEach(el => {
+            el.addEventListener("change", () => { readBlockToItem(i); syncTextoHead(); });
+            el.addEventListener("input", () => { readBlockToItem(i); syncTextoHead(); });
+          });
+          block.querySelectorAll("[data-a],[data-u]").forEach(el => {
+            const canEdit = !blocked;
+            el.addEventListener("dblclick", e => {
+              if (!canEdit) return;
+              e.preventDefault();
+              e.stopPropagation();
+              el.contentEditable = "true";
+              el.focus();
+              const r = document.createRange();
+              r.selectNodeContents(el);
+              const s = window.getSelection();
+              s.removeAllRanges();
+              s.addRange(r);
+            });
+            el.addEventListener("input", () => { readBlockToItem(i); syncTextoHead(); });
+            el.addEventListener("blur", () => {
+              el.textContent = cellText(el);
+              el.contentEditable = "false";
+              readBlockToItem(i);
+              syncTextoHead();
+            });
+            el.addEventListener("keydown", e => {
+              if (e.key === "Enter") { e.preventDefault(); el.blur(); }
+              if (e.key === "Escape") { e.preventDefault(); el.blur(); }
+            });
+            el.addEventListener("paste", e => {
+              const raw = (e.clipboardData || window.clipboardData).getData("text") || "";
+              if (!String(raw).trim()) return;
+              e.preventDefault();
+              e.stopPropagation();
+              readBlockToItem(i);
+              const n = Number(el.getAttribute("data-a") != null ? el.getAttribute("data-a") : el.getAttribute("data-u"));
+              const start = Number.isFinite(n) ? n : 0;
+              const pairs = parseAnchorUrlPairs(raw);
+              const editing = el.contentEditable === "true";
+              const occupied = !!cellText(el);
+              // Reemplaza solo si estás editando esa celda y ya tenía texto (doble clic + pegar encima)
+              const replace = editing && occupied && pairs.length === 1;
+              if (!pairs.length) {
+                if (editing) {
+                  el.textContent = String(raw).replace(/\r\n/g, "\n").trim().split("\n")[0] || "";
+                  readBlockToItem(i);
+                }
+                return;
+              }
+              pasteAnchorUrlPairs(i, start, raw, { replace: replace });
+            });
+          });
+          block.querySelectorAll("th.col-selectable").forEach(th => {
+            th.addEventListener("click", e => {
+              e.preventDefault();
+              e.stopPropagation();
+              setActive(i);
+              selectColumnCells(block, th.getAttribute("data-col-sel") || "anc");
+            });
+          });
+          block.querySelectorAll(".pos-cell").forEach(td => {
+            td.addEventListener("blur", () => {
+              td.textContent = cleanPos(td.textContent || "");
+              syncPosFromDom();
+            });
+            td.addEventListener("keydown", e => {
+              if (e.key === "Enter") { e.preventDefault(); td.blur(); }
+            });
+            td.addEventListener("paste", e => {
+              const raw = (e.clipboardData || window.clipboardData).getData("text") || "";
+              const lines = raw.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+              if (lines.length && lines[lines.length - 1] === "") lines.pop();
+              const vals = lines.map(s => cleanPos(s));
+              if (vals.length <= 1) return; // pegado simple → comportamiento nativo
+              e.preventDefault();
+              const cells = [...blocksEl.querySelectorAll(".pos-cell[contenteditable=true]")];
+              const start = cells.indexOf(td);
+              if (start < 0) return;
+              let filled = 0;
+              for (let k = 0; k < vals.length && start + k < cells.length; k++) {
+                cells[start + k].textContent = vals[k];
+                filled++;
+              }
+              syncPosFromDom();
+              filteredItems().forEach(it => { if (!isBlocked(it)) readBlockToItem(it._i); });
+              const toast = document.getElementById("toast");
+              toast.textContent = filled + " posiciones pegadas";
+              toast.classList.add("show");
+              setTimeout(() => toast.classList.remove("show"), 2000);
+            });
+          });
+        } else {
+          block.querySelectorAll("[data-f=keyword],[data-f=url]").forEach(el => {
+            el.addEventListener("click", e => e.stopPropagation());
+          });
+        }
+        const btnTexto = block.querySelector('[data-act="texto"]');
+        const btnListo = block.querySelector('[data-act="listo"]');
+        const btnMel = block.querySelector('[data-act="mel-vb"]');
+        if (btnTexto) btnTexto.addEventListener("click", e => { e.stopPropagation(); setActive(i); openTexto(); });
+        if (btnListo) btnListo.addEventListener("click", e => { e.stopPropagation(); setActive(i); markListo(); });
+        if (btnMel) btnMel.addEventListener("click", e => { e.stopPropagation(); unlockMel(i); });
+        const vbEl = block.querySelector("[data-f=vbEditor]");
+        if (vbEl) vbEl.addEventListener("change", e => {
+          e.stopPropagation();
+          ITEMS[i].vbEditor = vbEl.value === "ok" ? "ok" : "pendiente";
+          persistItemsFromRev();
+        });
+      });
+      syncTextoHead();
+    }
+
+    function itemRefPairs(it) {
+      const pairs = [];
+      const kw = (it && it.keyword || "").trim();
+      const url = (it && it.url || "").trim();
+      if (kw || url) pairs.push({ kw: kw || "—", url: url || "—" });
+      return pairs;
+    }
+
+    function weekSiblingItems(it) {
+      if (!it) return [];
+      return ITEMS.filter(x => x !== it && x.mes === it.mes && String(x.semana) === String(it.semana))
+        .sort((a, b) => (Number(a.ord) || 0) - (Number(b.ord) || 0));
+    }
+
+    function renderTextoRefs() {
+      const box = document.getElementById("tRefsList");
+      if (!box) return;
+      if (idx == null || !ITEMS[idx]) { box.innerHTML = ""; return; }
+      const it = ITEMS[idx];
+      const pairs = itemRefPairs(it);
+      const main = pairs[0] || { kw: "—", url: "—" };
+      const siblings = weekSiblingItems(it);
+      box.innerHTML = `
+        <div class="ref-main">
+          <div class="ref-col">
+            <div class="ref-col-top">
+              <span class="ref-lab">KW</span>
+              <button type="button" class="btn-mini" data-copy-btn="kw">Copiar</button>
+            </div>
+            <span class="ref-val" data-copy="kw">${esc(main.kw)}</span>
+          </div>
+          <div class="ref-col">
+            <div class="ref-col-top">
+              <span class="ref-lab">URL</span>
+              <button type="button" class="btn-mini" data-copy-btn="url">Copiar</button>
+            </div>
+            <span class="ref-val" data-copy="url">${esc(main.url)}</span>
+          </div>
+        </div>
+        <div class="refs-week">
+          <div class="refs-week-title">Otras KW de la Semana ${it.semana || "—"} · ${esc(it.mes || "")}</div>
+          <div class="refs-week-list">
+            ${siblings.length ? siblings.map((s, n) => `
+              <div class="week-row" data-sib="${n}">
+                <span class="wk">${esc(s.keyword || "—")}</span>
+                <span class="wu">${esc(s.url || "—")}</span>
+                <button type="button" class="btn-mini" data-copy-sib="${n}">Copiar</button>
+              </div>`).join("") : `<div class="week-row"><span class="wu">No hay otras KW en esta semana</span></div>`}
+          </div>
+        </div>`;
+      box.querySelectorAll("[data-copy-btn]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const kind = btn.getAttribute("data-copy-btn");
+          copyText(kind === "kw" ? main.kw : main.url, (kind === "kw" ? "Keyword" : "URL") + " copiada");
+        });
+      });
+      box.querySelectorAll("[data-copy-sib]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const n = Number(btn.getAttribute("data-copy-sib"));
+          const s = siblings[n];
+          if (!s) return;
+          copyText((s.keyword || "") + "\n" + (s.url || ""), "KW + URL de la semana copiadas");
+        });
+      });
+    }
+
+    function copyAllRefs() {
+      if (idx == null || !ITEMS[idx]) return;
+      const it = ITEMS[idx];
+      const pairs = itemRefPairs(it);
+      const siblings = weekSiblingItems(it);
+      const lines = [];
+      pairs.forEach(p => { lines.push(p.kw); lines.push(p.url); });
+      siblings.forEach(s => { lines.push(s.keyword || ""); lines.push(s.url || ""); });
+      if (!lines.filter(Boolean).length) { alert("No hay URL / keyword para copiar."); return; }
+      copyText(lines.join("\n"), "KW + URL (ítem y semana) copiadas");
+    }
+
+    function syncTextoHead() {
+      if (idx == null || !ITEMS[idx]) return;
+      const it = ITEMS[idx];
+      document.getElementById("tTitle").textContent = it.keyword || "Contenido";
+      document.getElementById("tMetaRow").innerHTML = `
+        <span class="meta-chip">Semana ${it.semana||1}</span>
+        <span class="meta-chip">${it.mes||""}</span>
+        <span class="meta-chip">${it.tipo||""}</span>
+        ${it.status==="pendiente"?'<span class="meta-chip">Pendiente</span>':""}
+        <span class="meta-chip">VB editor: ${it.vbEditor==="ok"?"OK":"Pendiente"}</span>`;
+      document.getElementById("tUrl").textContent = it.url || "—";
+      renderTextoRefs();
+      const root = blockRoot(idx);
+      const f = root && root.querySelector("[data-texto-flag]");
+      if (f) f.textContent = (it.texto||"").trim() ? "Texto cargado" : "Sin texto";
+    }
+
+    function escText(s) {
+      return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    function looksLikeHtml(s) {
+      return /<\s*(h[1-6]|p|div|article|section|br)\b/i.test(String(s || ""));
+    }
+
+    function normalizeTextoHtml(input) {
+      const raw = String(input || "").trim();
+      if (!raw) return "";
+      const holder = document.createElement("div");
+      if (looksLikeHtml(raw)) holder.innerHTML = raw;
+      else {
+        const parts = raw.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split(/\n\s*\n/);
+        const blocks = (parts.length > 1 ? parts : raw.split("\n")).map(x => x.trim()).filter(Boolean);
+        holder.innerHTML = blocks.map(b => "<p>" + escText(b) + "</p>").join("");
+      }
+      const out = [];
+      const pushBlock = (tag, node) => {
+        const tmp = document.createElement("div");
+        // solo texto + negrita/cursiva/enlaces simples
+        tmp.textContent = "";
+        const walkInline = (n, dest) => {
+          if (n.nodeType === 3) { dest.appendChild(document.createTextNode(n.textContent)); return; }
+          if (n.nodeType !== 1) return;
+          const t = n.tagName;
+          if (t === "BR") { dest.appendChild(document.createElement("br")); return; }
+          if (t === "STRONG" || t === "B" || t === "EM" || t === "I" || t === "A") {
+            const el = document.createElement(t === "B" ? "strong" : t === "I" ? "em" : t.toLowerCase());
+            if (t === "A" && n.getAttribute("href")) el.setAttribute("href", n.getAttribute("href"));
+            [...n.childNodes].forEach(c => walkInline(c, el));
+            dest.appendChild(el);
+            return;
+          }
+          [...n.childNodes].forEach(c => walkInline(c, dest));
+        };
+        [...node.childNodes].forEach(c => walkInline(c, tmp));
+        const inner = tmp.innerHTML.replace(/\s+/g, " ").trim();
+        if (!inner) return;
+        out.push("<" + tag + ">" + tmp.innerHTML.trim() + "</" + tag + ">");
+      };
+      const visit = (node) => {
+        if (node.nodeType === 3) {
+          const t = node.textContent.replace(/\s+/g, " ").trim();
+          if (t) out.push("<p>" + escText(t) + "</p>");
+          return;
+        }
+        if (node.nodeType !== 1) return;
+        const tag = node.tagName;
+        if (tag === "H2") return pushBlock("h2", node);
+        if (tag === "H3") return pushBlock("h3", node);
+        if (tag === "H4") return pushBlock("h4", node);
+        if (tag === "H1") return pushBlock("h2", node);
+        if (tag === "H5" || tag === "H6") return pushBlock("h4", node);
+        if (tag === "P") return pushBlock("p", node);
+        if (tag === "BR") return;
+        // div/article/section/li/etc → hijos o párrafo
+        if (!node.children.length) return pushBlock("p", node);
+        [...node.childNodes].forEach(visit);
+      };
+      [...holder.childNodes].forEach(visit);
+      return out.join("\n");
+    }
+
+    function setTextoEditorHtml(html) {
+      const ed = document.getElementById("textoBody");
+      const norm = normalizeTextoHtml(html);
+      ed.innerHTML = norm || "";
+    }
+
+    function getTextoEditorHtml() {
+      const ed = document.getElementById("textoBody");
+      return normalizeTextoHtml(ed.innerHTML);
+    }
+
+    function copyTextoConEtiquetas() {
+      const html = getTextoEditorHtml();
+      if (!html) { alert("No hay texto para copiar."); return; }
+      copyText(html, "Texto copiado con etiquetas");
+    }
+
+
+    function parseAnchorUrlPairs(raw) {
+      const text = String(raw || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+      if (!text) return [];
+      const lines = text.split("\n").map(l => l.trim()).filter(l => l !== "");
+      const pairs = [];
+      for (let i = 0; i < lines.length; ) {
+        const line = lines[i];
+        const tabParts = line.split("\t");
+        if (tabParts.length >= 2 && /https?:\/\//i.test(tabParts[tabParts.length - 1])) {
+          pairs.push({ a: tabParts.slice(0, -1).join("\t").trim(), u: tabParts[tabParts.length - 1].trim() });
+          i++;
+          continue;
+        }
+        const m = line.match(/^(.*?)\s+(https?:\/\/\S+)\s*$/i);
+        if (m) {
+          pairs.push({ a: m[1].trim(), u: m[2].trim() });
+          i++;
+          continue;
+        }
+        if (i + 1 < lines.length && /^https?:\/\//i.test(lines[i + 1])) {
+          pairs.push({ a: line, u: lines[i + 1].trim() });
+          i += 2;
+          continue;
+        }
+        pairs.push({ a: line, u: "" });
+        i++;
+      }
+      return pairs;
+    }
+
+    function slotEmpty(slot) {
+      return !String((slot && slot.a) || "").trim() && !String((slot && slot.u) || "").trim();
+    }
+
+    function firstEmptyAnchorSlot(it, fromN) {
+      for (let s = Math.max(0, fromN | 0); s < 10; s++) {
+        if (slotEmpty(it.anchors[s])) return s;
+      }
+      return -1;
+    }
+
+    function pasteAnchorUrlPairs(itemIndex, startN, raw, opts) {
+      const pairs = parseAnchorUrlPairs(raw);
+      if (!pairs.length) return 0;
+      const it = ITEMS[itemIndex];
+      if (!it || isBlocked(it)) return 0;
+      if (!it.anchors) it.anchors = Array.from({ length: 10 }, () => ({ a: "", u: "", p: "" }));
+      while (it.anchors.length < 10) it.anchors.push({ a: "", u: "", p: "" });
+      const replace = !!(opts && opts.replace);
+      let start = Math.max(0, Math.min(9, Number(startN) || 0));
+      // Si la celda destino ya tiene datos y no es reemplazo explícito → pegar en la siguiente vacía
+      if (!replace && !slotEmpty(it.anchors[start])) {
+        const empty = firstEmptyAnchorSlot(it, start + 1);
+        if (empty < 0) {
+          const toast = document.getElementById("toast");
+          toast.textContent = "Las 10 filas de interlinking ya están llenas";
+          toast.classList.add("show");
+          setTimeout(() => toast.classList.remove("show"), 2200);
+          return 0;
+        }
+        start = empty;
+      }
+      let filled = 0;
+      for (let k = 0; k < pairs.length && start + k < 10; k++) {
+        const slot = it.anchors[start + k];
+        // No pisar filas ya llenas al pegar un bloque, salvo la primera si replace
+        if (k > 0 && !slotEmpty(slot) && !replace) {
+          const empty = firstEmptyAnchorSlot(it, start + k);
+          if (empty < 0) break;
+          it.anchors[empty].a = pairs[k].a;
+          it.anchors[empty].u = pairs[k].u;
+          filled++;
+          continue;
+        }
+        slot.a = pairs[k].a;
+        slot.u = pairs[k].u;
+        filled++;
+      }
+      renderBlocks();
+      const toast = document.getElementById("toast");
+      toast.textContent = filled + " interlink(s) pegados en fila " + (start + 1) + " (sin borrar anteriores)";
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2200);
+      return filled;
+    }
+
+    function copyFromHist(h) {
+      const text = (h.keyword || "") + "\t" + (h.url || "");
+      const toast = document.getElementById("toast");
+      const done = () => {
+        toast.textContent = "Keyword + URL copiadas";
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 1800);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+          done();
+        });
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        done();
+      }
+    }
+
+    function renderHist() {
+      const q = document.getElementById("hq").value.trim().toLowerCase();
+      const t = document.getElementById("htipo").value;
+      const box = document.getElementById("hist");
+      if (!q) {
+        box.innerHTML = `<div class="empty">Escribe una keyword o URL<br/><span style="font-size:.65rem;opacity:.8">Fuente: URLs trabajadas (más actual → más antigua)</span></div>`;
+        return;
+      }
+      const rows = HIST.filter(h => {
+        if (t && h.tipo !== t) return false;
+        const kw = (h.keyword || "").toLowerCase();
+        const url = (h.url || "").toLowerCase();
+        return kw.includes(q) || url.includes(q) || String(h.anio).includes(q);
+      }).slice(0, 120);
+      if (!rows.length) {
+        box.innerHTML = '<div class="empty">Sin resultados</div>';
+        return;
+      }
+      box.innerHTML = rows.map(h => `
+        <button type="button" class="hist-item" data-hi="${HIST.indexOf(h)}" title="Copia Keyword + URL">
+          <div class="kw">${esc(h.keyword)}</div>
+          <div class="meta">${esc(h.url)}</div>
+          <span class="badge">${esc(h.tipo || "—")} · ${esc(h.anio)}</span>
+        </button>`).join("");
+      box.querySelectorAll(".hist-item").forEach(b => b.addEventListener("click", () => {
+        copyFromHist(HIST[Number(b.dataset.hi)]);
+      }));
+    }
+
+    function openTexto() {
+      if (idx == null) return;
+      if (isBlocked(ITEMS[idx])) {
+        alert("Este contenido está pendiente.");
+        return;
+      }
+      readSheetToItem();
+      syncTextoHead();
+      setTextoEditorHtml(ITEMS[idx].texto || "");
+      document.getElementById("bdTexto").classList.add("open");
+      document.getElementById("textoBody").focus();
+    }
+    function closeTexto(){ document.getElementById("bdTexto").classList.remove("open"); }
+
+    document.getElementById("btnCerrarTexto").addEventListener("click", closeTexto);
+    document.getElementById("bdTexto").addEventListener("click", e => { if (e.target.id==="bdTexto") closeTexto(); });
+    document.getElementById("btnCopiarEtiquetas").addEventListener("click", copyTextoConEtiquetas);
+    document.getElementById("btnCopiarRefs").addEventListener("click", copyAllRefs);
+    document.getElementById("btnCopiarSelPairs").addEventListener("click", () => copySelectedPairs());
+    bindPairSelection();
+
+    (function initTextoTheme() {
+      const ed = document.getElementById("textoBody");
+      const btn = document.getElementById("btnTemaTexto");
+      const key = "mova-paris-texto-theme";
+      const apply = (mode) => {
+        const light = mode === "light";
+        ed.classList.toggle("theme-light", light);
+        btn.textContent = light ? "☀️" : "🌙";
+        btn.title = light ? "Fondo claro (clic para oscuro)" : "Fondo oscuro (clic para claro)";
+        try { localStorage.setItem(key, light ? "light" : "dark"); } catch (e) {}
+      };
+      let mode = "dark";
+      try { mode = localStorage.getItem(key) || "dark"; } catch (e) {}
+      apply(mode === "light" ? "light" : "dark");
+      btn.addEventListener("click", () => apply(ed.classList.contains("theme-light") ? "dark" : "light"));
+    })();
+
+    const textoBodyEl = document.getElementById("textoBody");
+    textoBodyEl.addEventListener("blur", () => {
+      textoBodyEl.innerHTML = normalizeTextoHtml(textoBodyEl.innerHTML);
+    });
+    textoBodyEl.addEventListener("paste", e => {
+      e.preventDefault();
+      const cd = e.clipboardData || window.clipboardData;
+      const html = cd && cd.getData("text/html");
+      const plain = cd && cd.getData("text/plain");
+      const source = (html && looksLikeHtml(html)) ? html : (plain || "");
+      const norm = normalizeTextoHtml(source);
+      if (!norm) return;
+      // Si el editor está vacío, reemplaza; si no, inserta al final de la selección
+      const ed = textoBodyEl;
+      if (!String(ed.innerHTML || "").replace(/<br\s*\/?>/gi,"").trim()) {
+        ed.innerHTML = norm;
+      } else {
+        document.execCommand("insertHTML", false, norm);
+        ed.innerHTML = normalizeTextoHtml(ed.innerHTML);
+      }
+    });
+    textoBodyEl.addEventListener("copy", e => {
+      const html = getTextoEditorHtml();
+      if (!html) return;
+      e.preventDefault();
+      e.clipboardData.setData("text/plain", html);
+      e.clipboardData.setData("text/html", html);
+    });
+    textoBodyEl.addEventListener("cut", e => {
+      const html = getTextoEditorHtml();
+      if (!html) return;
+      e.preventDefault();
+      e.clipboardData.setData("text/plain", html);
+      e.clipboardData.setData("text/html", html);
+      // corta la selección visual → limpia selección
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount && textoBodyEl.contains(sel.anchorNode)) {
+        sel.deleteFromDocument();
+        textoBodyEl.innerHTML = normalizeTextoHtml(textoBodyEl.innerHTML);
+      }
+    });
+
+    document.getElementById("btnGuardarTexto").addEventListener("click", () => {
+      const body = getTextoEditorHtml();
+      if (!body) { alert("Pega o escribe el texto."); return; }
+      if (idx != null) {
+        ITEMS[idx].texto = body;
+        persistItemsFromRev();
+      }
+      closeTexto();
+      renderBlocks();
+      const s = document.getElementById("status");
+      s.textContent = "Texto guardado (HTML estructurado).";
+      s.classList.add("show");
+    });
+
+    function markListo() {
+      if (idx == null) return;
+      readSheetToItem();
+      const it = ITEMS[idx];
+      if (isBlocked(it)) {
+        alert("Este contenido está pendiente.");
+        return;
+      }
+      if (!it.keyword || !it.url) { alert("Completa Keyword y URL."); return; }
+      if (!(it.texto||"").trim()) { alert("Falta el texto."); return; }
+      it.listo = true;
+      const s = document.getElementById("status");
+      s.textContent = "Listo.";
+      s.classList.add("show");
+      renderBlocks();
+    }
+
+    document.getElementById("hq").addEventListener("input", renderHist);
+    document.getElementById("htipo").addEventListener("change", renderHist);
+    document.getElementById("q").addEventListener("input", renderBlocks);
+    document.getElementById("fStatus").addEventListener("change", () => { idx = null; renderBlocks(); });
+    document.getElementById("fVbEditor").addEventListener("change", () => { idx = null; renderBlocks(); });
+    mesSel.addEventListener("change", () => { idx = null; renderBlocks(); });
+    document.getElementById("semana").addEventListener("change", () => { idx = null; renderBlocks(); });
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        if (document.getElementById("bdTexto").classList.contains("open")) closeTexto();
+      }
+    });
+
+    // Deep-link paso 2: #redaccion | #paso-2 | ?paso=2
+    const wantRedaccion = (() => {
+      const h = (location.hash || "").toLowerCase();
+      if (h === "#redaccion" || h === "#paso-2" || h === "#paso2") return true;
+      try {
+        return new URLSearchParams(location.search).get("paso") === "2";
+      } catch (e) { return false; }
+    })();
+    syncNavLock();
+    if (wantRedaccion) goView("redaccion");
+    else goView("revision");
+    renderRev();
+    renderHist();
+    renderBlocks();
+  </script>
+
+</div>
+
+
+<script>
+(function () {
+  const LS = "mova-session-v1";
+  const AUTH_KEY = "mova_redactores_sesion";
+  const AUTH_TTL = 8 * 60 * 60 * 1000;
+  const MV = {
+    cliente: "352285024176-ki6a4n01f6vcbos3o12n9ql6uc6t2vq4.apps.googleusercontent.com",
+    auth: "https://grupomakingof.app.n8n.cloud/webhook/mova-auth",
+    empresa: "REDACTORES"
+  };
+  const CFG = {
+    empresa: "Grupo Making OF",
+    producto: "MOVA · Portal Redactores",
+    roles: {
+      editor: { id: "editor", label: "Vista editor", desc: "Solo para el equipo editor. No disponible en este acceso de redactora.", soon: true },
+      redactor: { id: "redactor", label: "Vista redactor", desc: "Solo los clientes asignados a esa redactora." },
+      cliente: { id: "cliente", label: "Vista cliente", desc: "Pendiente. Se define después.", soon: true }
+    },
+    clientes: [
+      { id: "paris", initials: "PR", name: "Paris", tags: ["Retail", "Ecommerce", "2 pasos"], live: true }
+    ]
+  };
+
+  const shell = document.getElementById("mova-shell-root");
+  const MV_LOCAL = location.protocol === "file:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname || "");
+  const MV_PROD = /(?:^|\.)acme-chile\.cl$/i.test(location.hostname || "");
+  let MV_IFRAME = false;
+  try { MV_IFRAME = window.top !== window.self; } catch (e) { MV_IFRAME = true; }
+
+  function loadSession() {
+    try { return JSON.parse(localStorage.getItem(LS) || "null"); } catch (e) { return null; }
+  }
+  function saveSession(s) {
+    try { localStorage.setItem(LS, JSON.stringify(s)); } catch (e) {}
+  }
+  function loadAuth() {
+    try { return JSON.parse(sessionStorage.getItem(AUTH_KEY) || "null"); } catch (e) { return null; }
+  }
+  function saveAuth(payload) {
+    try { sessionStorage.setItem(AUTH_KEY, JSON.stringify(payload)); } catch (e) {}
+  }
+  function clearAuth() {
+    try { sessionStorage.removeItem(AUTH_KEY); } catch (e) {}
+    try { localStorage.removeItem(LS); } catch (e) {}
+    window.MOVA_USER = null;
+    window.MOVA_TOKEN = "";
+  }
+  function tokExp(t) {
+    try {
+      return (JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).exp || 0) * 1000;
+    } catch (e) { return 0; }
+  }
+  function mailFromTok(t) {
+    try {
+      return (JSON.parse(decodeURIComponent(escape(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))))) || {}).email || "";
+    } catch (e) { return ""; }
+  }
+  function mvAviso(t, tipo) {
+    const m = document.getElementById("mvMsg");
+    if (!m) return;
+    m.textContent = t || "";
+    m.className = "mv-msg" + (t ? " on " + (tipo || "err") : "");
+  }
+  function mvCerrarGate() {
+    const gate = document.getElementById("mvGate");
+    if (gate) {
+      gate.classList.add("off");
+      gate.setAttribute("aria-hidden", "true");
+      gate.style.display = "none";
+    }
+    document.body.classList.remove("mv-lock");
+  }
+  function mvAbrirGate() {
+    const gate = document.getElementById("mvGate");
+    if (gate) {
+      gate.classList.remove("off");
+      gate.removeAttribute("aria-hidden");
+      gate.style.display = "flex";
+    }
+    document.body.classList.add("mv-lock");
+    document.body.classList.add("mova-in-shell");
+    document.body.classList.remove("mova-in-paris");
+  }
+
+  function showShell(view) {
+    document.body.classList.add("mova-in-shell");
+    document.body.classList.remove("mova-in-paris");
+    shell.querySelectorAll(".mova-shell-view").forEach((el) => {
+      el.classList.toggle("active", el.getAttribute("data-view") === view);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function showParis(session) {
+    document.body.classList.remove("mova-in-shell");
+    document.body.classList.add("mova-in-paris");
+    const who = document.getElementById("msParisWho");
+    const rol = document.getElementById("msParisRol");
+    if (who) who.textContent = session.nombre || (window.MOVA_USER && window.MOVA_USER.nombre) || "Redactora";
+    if (rol) rol.textContent = session.rol === "editor" ? "Editor" : "Redactora";
+    const crumb = document.getElementById("crumbRole");
+    if (crumb) crumb.textContent = session.rol === "editor" ? "Vista editor" : "Vista redactor";
+    window.scrollTo(0, 0);
+  }
+
+  function syncUserChip() {
+    const u = window.MOVA_USER;
+    document.querySelectorAll("[data-ms-user]").forEach((el) => {
+      el.textContent = u ? (u.nombre || u.correo || "") : "";
+    });
+  }
+
+  function clienteListForSession(s) {
+    const ids = (s && Array.isArray(s.clientes)) ? s.clientes.map((x) => String(x).toLowerCase().trim()).filter(Boolean) : [];
+    if (!ids.length) return CFG.clientes.slice();
+    return CFG.clientes.filter((c) => ids.includes(c.id) || ids.includes(String(c.name).toLowerCase()));
+  }
+
+  function goAccesos() {
+    goHub();
+  }
+
+  function goHub() {
+    const auth = loadAuth();
+    const u = (auth && auth.u) || window.MOVA_USER || {};
+    const s = {
+      rol: u.rol || "redactor",
+      redactorId: "r-auth",
+      nombre: u.nombre || "Redactora",
+      correo: u.correo || "",
+      clientes: Array.isArray(u.clientes) ? u.clientes : (auth && auth.u && auth.u.clientes) || []
+    };
+    saveSession(s);
+    renderHub();
+    showShell("hub");
+    syncUserChip();
+  }
+  function goRedactor() { goHub(); }
+  function goParisHome() {
+    const s = loadSession() || {};
+    saveSession(s);
+    showShell("paris-home");
+    syncUserChip();
+  }
+
+  function goEditor() {
+    goAccesos();
+  }
+
+  function openParis(paso) {
+    const s = loadSession() || { rol: "redactor", nombre: (window.MOVA_USER && window.MOVA_USER.nombre) || "Redactora" };
+    saveSession(s);
+    showParis(s);
+    try {
+      if (paso === "revision" && typeof goView === "function") goView("revision");
+      if (paso === "redaccion" && typeof goView === "function") goView("redaccion");
+      if (paso === "redaccion") {
+        const btn = document.querySelector('[data-view="redaccion"]');
+        if (btn) btn.click();
+      }
+      if (paso === "revision") {
+        const btn = document.querySelector('[data-view="revision"]');
+        if (btn) btn.click();
+      }
+    } catch (e) {}
+    if (typeof window.MOVA_PARIS_SYNC === "function") {
+      window.MOVA_PARIS_SYNC().then((r) => {
+        if (r && r.ok) console.info("[MOVA] sync n8n", r);
+      }).catch(() => {});
+    }
+  }
+
+  function renderRoles() {
+    const grid = document.getElementById("msRoleGrid");
+    if (!grid) return;
+    const order = ["editor", "redactor", "cliente"];
+    const icos = { editor: "ED", redactor: "RD", cliente: "CL" };
+    grid.innerHTML = "";
+    order.forEach((key) => {
+      const r = CFG.roles[key];
+      const locked = !!r.soon || key !== "redactor";
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = "ms-card" + (locked ? " locked" : "");
+      el.innerHTML = `
+        <div class="ico">${icos[key]}</div>
+        <h2>${r.label}</h2>
+        <p>${r.desc}</p>
+        <div class="foot"><span>${key}</span><span class="${locked ? "soon" : "go"}">${locked ? "Sin acceso" : "Entrar ›"}</span></div>`;
+      if (!locked) el.addEventListener("click", () => goRedactor());
+      else {
+        el.disabled = true;
+        el.setAttribute("aria-disabled", "true");
+      }
+      grid.appendChild(el);
+    });
+  }
+
+  function renderHub() {
+    const s = loadSession() || {};
+    const nameEl = document.getElementById("msWhoName");
+    if (nameEl) nameEl.textContent = s.nombre || "Redactora";
+    const list = clienteListForSession(s);
+    const note = document.getElementById("msAssignNote");
+    if (note) note.textContent = list.length ? `${list.length} disponibles` : "Sin portales asignados";
+    const grid = document.getElementById("msBulletGrid");
+    const side = document.getElementById("msSideNav");
+    if (!grid || !side) return;
+    grid.innerHTML = "";
+    side.innerHTML = "";
+    if (!list.length) {
+      grid.innerHTML = '<div class="empty" style="color:var(--muted)">No hay clientes asignados a tu cuenta.</div>';
+      return;
+    }
+    list.forEach((item) => {
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = "ms-bullet";
+      el.innerHTML = `
+        <div class="ms-bullet-top"><div class="ms-bullet-ico">${item.initials}</div><span class="ms-badge-live">LIVE</span></div>
+        <h3>${item.name}</h3>
+        <div class="ms-bullet-foot">
+          <div>${(item.tags || []).map((tg) => `<span class="ms-tag">${tg}</span>`).join("")}</div>
+          <span class="ms-abrir">ABRIR ›</span>
+        </div>`;
+      el.addEventListener("click", () => goParisHome());
+      grid.appendChild(el);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ms-side-item";
+      btn.innerHTML = `<span class="ico">${item.initials}</span><span>${item.name}</span><span class="live">LIVE</span>`;
+      btn.addEventListener("click", () => goParisHome());
+      side.appendChild(btn);
+    });
+  }
+  function renderRedactor() { renderHub(); }
+
+  function afterAuthEnter(u, tok) {
+    const exp = tok ? Math.min(tokExp(tok) || 0, Date.now() + AUTH_TTL) : Date.now() + AUTH_TTL;
+    const user = {
+      nombre: u.nombre || "",
+      correo: u.correo || "",
+      nivel: u.nivel || "",
+      rol: u.rol || "redactor",
+      clientes: Array.isArray(u.clientes) ? u.clientes : []
+    };
+    saveAuth({ u: user, tok: tok || "", exp: exp });
+    window.MOVA_USER = user;
+    window.MOVA_TOKEN = tok || "";
+    mvAviso("");
+    mvCerrarGate();
+    syncUserChip();
+
+    const rol = String(user.rol || "").toLowerCase();
+    // Redactor + Editor/Desarrollador (para pruebas) entran a la UI redactora de este HTML.
+    if (rol === "redactor" || rol === "editor") {
+      goRedactor();
+      return;
+    }
+    mvAbrirGate();
+    mvAviso("Tu cuenta no tiene acceso a este portal de redactores.", "err");
+    clearAuth();
+  }
+
+  function mvSalir() {
+    clearAuth();
+    try {
+      if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect();
+    } catch (e) {}
+    location.reload();
+  }
+
+  function mvValidar(token) {
+    mvAviso("Validando acceso…", "load");
+    fetch(MV.auth, {
+      method: "POST",
+      cache: "no-store",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ token: token, empresa: MV.empresa })
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        d = Array.isArray(d) ? d[0] : d;
+        if (d && d.ok === true) {
+          const rol = String(d.rol || "").toLowerCase();
+          if (rol && rol !== "redactor" && rol !== "editor") {
+            mvAviso((d && d.motivo) || "Tu cuenta no está autorizada para este portal.");
+            return;
+          }
+          afterAuthEnter({
+            nombre: d.nombre || "",
+            correo: d.correo || mailFromTok(token),
+            nivel: d.nivel || "",
+            rol: d.rol || "redactor",
+            clientes: d.clientes || []
+          }, token);
+        } else {
+          mvAviso((d && d.motivo) || "Tu cuenta no está autorizada para acceder a este portal. Contacta a tu ejecutivo de Grupo Making OF.");
+        }
+      })
+      .catch(() => mvAviso("No pudimos validar tu acceso. Reintenta en unos segundos."));
+  }
+
+  function bootGoogle() {
+    mvAviso("Inicia sesión con Google para entrar.", "load");
+    const sc = document.createElement("script");
+    sc.src = "https://accounts.google.com/gsi/client";
+    sc.async = true;
+    sc.defer = true;
+    sc.onload = function () {
+      try {
+        google.accounts.id.initialize({
+          client_id: MV.cliente,
+          callback: (r) => { if (r && r.credential) mvValidar(r.credential); },
+          auto_select: false,
+          cancel_on_tap_outside: true
+        });
+        google.accounts.id.renderButton(document.getElementById("mvBtn"), {
+          theme: "filled_black",
+          size: "large",
+          shape: "pill",
+          text: "signin_with",
+          width: 330,
+          locale: "es"
+        });
+        mvAviso("");
+      } catch (e) {
+        mvAviso("No pudimos cargar el inicio de sesión de Google. Recarga la página.");
+      }
+    };
+    sc.onerror = function () {
+      mvAviso("No pudimos cargar Google. Abre el portal en acme-chile.cl e inténtalo de nuevo.");
+    };
+    document.head.appendChild(sc);
+  }
+
+  document.addEventListener("click", (ev) => {
+    const nav = ev.target.closest("[data-mova-nav]");
+    if (!nav) return;
+    ev.preventDefault();
+    const to = nav.getAttribute("data-mova-nav");
+    if (to === "accesos" || to === "hub") goHub();
+    else if (to === "shell" || to === "paris-home") goParisHome();
+    else if (to === "contenidos" || to === "redaccion") openParis("redaccion");
+    else if (to === "revision") openParis("revision");
+    else if (to === "salir") mvSalir();
+  });
+
+  const back = document.getElementById("msBackShell");
+  if (back) back.addEventListener("click", () => goParisHome());
+
+  document.body.classList.add("mova-in-shell");
+
+  // Sesión Google vigente
+  const previa = loadAuth();
+  if (previa && previa.exp > Date.now() && previa.u && (previa.u.rol === "redactor" || previa.u.rol === "editor")) {
+    window.MOVA_USER = previa.u;
+    window.MOVA_TOKEN = previa.tok || "";
+    mvCerrarGate();
+    goRedactor();
+    return;
+  }
+
+  // Notion / iframe preview: no trabar
+  if (MV_IFRAME || (!MV_PROD && !MV_LOCAL && location.protocol !== "file:")) {
+    mvAviso("Vista previa: Google no funciona aquí. Abriendo vista redactora de demostración…", "load");
+    setTimeout(function () {
+      afterAuthEnter({ nombre: "Vista previa", correo: "preview@local", rol: "redactor", clientes: ["paris"] }, "");
+    }, 250);
+    return;
+  }
+
+  if (MV_LOCAL) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "mv-local";
+    b.textContent = "Entrar (local, sin Google)";
+    b.onclick = function () {
+      afterAuthEnter({ nombre: "Adria", correo: "adria@local", rol: "redactor", nivel: "Redactor", clientes: ["paris"] }, "");
+    };
+    const card = document.querySelector(".mv-card");
+    if (card) card.insertBefore(b, document.getElementById("mvMsg"));
+  }
+  if (location.protocol === "file:") {
+    mvAviso("Archivo local: usa el botón de abajo o súbelo a acme-chile.cl para Google Sign-In.", "load");
+    return;
+  }
+
+  bootGoogle();
+})();
+</script>
+
+
+
+</body>
+</html>

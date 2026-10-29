@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MOVA — Vista cliente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --petroleo: #091914; --petroleo2: #133429; --verde: #93C64A; --celeste: #99EADA;
+      --txt: #FDFBF7; --muted: rgba(253,251,247,.62); --line-soft: rgba(253,251,247,.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; font-family: "Lato", sans-serif; color: var(--txt);
+      background: var(--petroleo); display: grid; place-items: center; padding: 1.5rem;
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 65% 45% at 12% -8%, rgba(147,198,74,.12), transparent 55%),
+        linear-gradient(180deg, var(--petroleo) 0%, var(--petroleo2) 50%, var(--petroleo) 100%);
+    }
+    .card {
+      position: relative; z-index: 1; max-width: 420px; width: 100%;
+      padding: 1.5rem; border-radius: 16px; border: 1px solid var(--line-soft);
+      background: #0e1f19;
+    }
+    .kicker { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--verde); margin-bottom: .4rem; }
+    h1 { font-family: "Instrument Sans", sans-serif; font-size: 1.35rem; margin-bottom: .5rem; }
+    p { color: var(--muted); line-height: 1.5; margin-bottom: 1.1rem; }
+    a {
+      display: inline-block; text-decoration: none; color: var(--petroleo); background: var(--verde);
+      font-family: "Instrument Sans", sans-serif; font-weight: 700; font-size: .85rem;
+      padding: .55rem 1rem; border-radius: 999px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="kicker">Vista cliente</div>
+    <h1>La vemos después</h1>
+    <p>Este acceso queda reservado. El flujo actual es Editor (todo) y Redactor (solo clientes asignados).</p>
+    <a href="index.html">Volver a accesos</a>
+  </div>
+</body>
+</html>
