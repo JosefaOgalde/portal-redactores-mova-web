@@ -136,6 +136,19 @@ body.mova-in-paris #mova-shell-root { display:none; }
 body.mova-in-paris #mova-paris-root { display:block; }
 body.mova-in-shell { background:#091914; }
 
+.ms-side-item.on{background:rgba(147,198,74,.16)}
+.ms-hub-lead{color:var(--muted);max-width:40rem;margin-bottom:1.25rem;line-height:1.5}
+.ms-paris{color:#8eb6e8}
+.ms-paris-hero h1{font-size:clamp(1.6rem,3vw,2.2rem)}
+.ms-ops{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem;margin-top:1.5rem}
+.ms-op{text-align:left;border:1px solid var(--line-soft);background:var(--card);border-radius:14px;padding:1rem;color:inherit;cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:.35rem}
+.ms-op:hover{border-color:var(--line)}
+.ms-op span{font-family:"Instrument Sans",sans-serif;font-weight:700}
+.ms-op small{color:var(--muted);font-size:.75rem}
+.ms-op.locked{opacity:.45;cursor:not-allowed}
+.ms-badge-live{font-size:.62rem;font-weight:800;color:var(--verde);letter-spacing:.04em}
+
+
 
     :root {
       --bg:#070b12; --bg2:#0c1420;
@@ -396,6 +409,7 @@ body.mv-lock #mova-paris-root{visibility:hidden!important;pointer-events:none!im
 .mv-msg.on{display:block}
 .mv-msg.err{background:#FBEBD2;border:1px solid rgba(168,101,15,.25);color:#7A4A0C}
 .mv-msg.load{background:#EAF2EE;border:1px solid rgba(9,25,20,.09);color:#2A5A49}
+.mv-audit{margin-top:1.1rem;font:600 10px "Instrument Sans",sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#5C7468}
 .ms-userchip{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;color:var(--muted)}
 .ms-userchip b{color:var(--verde)}
 .ms-salir{border:1px solid var(--line-soft);background:transparent;color:var(--muted);border-radius:999px;padding:.3rem .7rem;font:inherit;font-size:.72rem;font-weight:700;cursor:pointer}
@@ -407,57 +421,45 @@ body.mv-lock #mova-paris-root{visibility:hidden!important;pointer-events:none!im
 
 <div id="mvGate" role="dialog" aria-modal="true" aria-label="Acceso restringido">
   <div class="mv-card">
-    <div class="mv-logo">Grupo Making OF</div>
-    <div class="mv-t">MOVA <span>Redactores</span></div>
-    <div class="mv-sub">Portal de redacción · Acceso con tu cuenta Google autorizada</div>
+    <div class="mv-logo">Grupo Making OF · Portal de marketing · Paris</div>
+    <div class="mv-t">Acceso <span>restringido</span></div>
+    <div class="mv-sub">Ingresa con tu cuenta corporativa. El acceso está habilitado solo para usuarios autorizados por Grupo Making OF.</div>
     <div id="mvBtn"></div>
     <div class="mv-msg" id="mvMsg"></div>
+    <div class="mv-audit">MOVA · Acceso auditado</div>
   </div>
 </div>
 
 
 <div id="mova-shell-root">
-  <!-- ACCESOS -->
-  <section class="mova-shell-view active" id="view-accesos" data-view="accesos">
-    <div class="ms-wrap">
-      <div class="ms-brand">
-        <div class="ms-mark">M</div>
-        <div><strong>MOVA</strong><small>Grupo Making OF · Portal Redactores</small></div>
-      </div>
-      <h1>Elige tu acceso</h1>
-      <p class="ms-lead">Tras validar tu Google, entras como redactora. Editor y cliente no están disponibles aquí.</p>
-      <div class="ms-grid" id="msRoleGrid"></div>
-      <div class="ms-note">Solo <b>Vista redactor</b> está habilitada. Editor y cliente aparecen bloqueados.</div>
-    </div>
-  </section>
-
-  <!-- REDACTOR -->
-  <section class="mova-shell-view" id="view-redactor" data-view="redactor">
+  <!-- HUB CLIENTES (post Google) -->
+  <section class="mova-shell-view active" id="view-hub" data-view="hub">
     <div class="ms-app">
       <aside class="ms-side">
-        <button type="button" class="ms-side-brand" data-mova-nav="accesos">
+        <div class="ms-side-brand" style="cursor:default">
           <div class="ms-mark">M</div>
-          <div><strong>MOVA</strong><small>Vista redactor</small></div>
-        </button>
+          <div><strong>MOVA</strong><small>Grupo Making OF</small></div>
+        </div>
         <div>
-          <div class="ms-side-label">Mis clientes</div>
+          <div class="ms-side-label">Portales de cliente</div>
           <nav id="msSideNav"></nav>
         </div>
-        <div class="ms-side-foot">Solo clientes asignados</div>
+        <div class="ms-side-foot">
+          <div class="ms-userchip">Sesión · <b data-ms-user></b></div>
+          <button type="button" class="ms-salir" data-mova-nav="salir" style="margin-top:.45rem">Salir</button>
+        </div>
       </aside>
       <div class="ms-main">
         <header class="ms-topbar">
-          <div class="ms-crumb"><button type="button" data-mova-nav="accesos">Accesos</button> / <b>Vista redactor</b></div>
-          <div style="font-size:.78rem;color:var(--muted)">No ve el trabajo de otros redactores</div>
+          <div class="ms-crumb"><b>MOVA</b> / Clientes</div>
         </header>
         <div class="ms-content">
-          <div class="ms-kicker">Acceso redactor</div>
-          <h1>Tus clientes asignados</h1>
-          <select id="msRedactorSel" aria-label="Elegir redactor" hidden></select>
-          <span id="msWhoName" hidden>Adria</span>
+          <div class="ms-kicker">Plataforma de clientes</div>
+          <h1>Un portal por marca, una sola operación</h1>
+          <p class="ms-hub-lead">Cada cliente tiene su espacio de SEO y contenidos. Elige una marca para abrir su portal.</p>
           <div class="ms-sec">
-            <h2>Clientes</h2>
-            <p id="msAssignNote" hidden>—</p>
+            <h2>Portales de cliente</h2>
+            <p id="msAssignNote">—</p>
           </div>
           <div class="ms-bullets" id="msBulletGrid"></div>
         </div>
@@ -465,48 +467,68 @@ body.mv-lock #mova-paris-root{visibility:hidden!important;pointer-events:none!im
     </div>
   </section>
 
-  <!-- EDITOR -->
-  <section class="mova-shell-view" id="view-editor" data-view="editor">
+  <!-- PARIS INICIO (landing del cliente) -->
+  <section class="mova-shell-view" id="view-paris-home" data-view="paris-home">
     <div class="ms-app">
       <aside class="ms-side">
-        <button type="button" class="ms-side-brand" data-mova-nav="accesos">
+        <button type="button" class="ms-side-brand" data-mova-nav="hub">
           <div class="ms-mark">M</div>
-          <div><strong>MOVA</strong><small>Vista editor</small></div>
+          <div><strong>MOVA</strong><small>Portal Paris</small></div>
         </button>
         <div>
-          <div class="ms-side-label">Clientes</div>
-          <nav id="msEditorSide"></nav>
+          <div class="ms-side-label">Menú</div>
+          <nav>
+            <button type="button" class="ms-side-item on" data-mova-nav="paris-home"><span class="ico">IN</span><span>Inicio</span></button>
+            <button type="button" class="ms-side-item" data-mova-nav="contenidos"><span class="ico">CO</span><span>Contenidos</span></button>
+          </nav>
         </div>
-        <div class="ms-side-foot">Ve el trabajo de todos los redactores</div>
+        <div class="ms-side-foot">
+          <div class="ms-userchip"><b data-ms-user></b></div>
+          <button type="button" class="ms-salir" data-mova-nav="salir" style="margin-top:.45rem">Salir</button>
+        </div>
       </aside>
       <div class="ms-main">
         <header class="ms-topbar">
-          <div class="ms-crumb"><button type="button" data-mova-nav="accesos">Accesos</button> / <b>Vista editor</b></div>
-          <div style="font-size:.78rem;color:var(--muted)">Supervisión completa</div>
+          <div class="ms-crumb"><button type="button" data-mova-nav="hub">← Volver a clientes</button> / <b>MOVA / Clientes / Paris</b></div>
         </header>
-        <div class="ms-content">
-          <div class="ms-kicker">Acceso editor</div>
-          <h1>Todos los clientes</h1>
-          <p>Como editor ves Paris y lo que hacen las redactoras.</p>
-          <div class="ms-bullets" id="msEditorGrid"></div>
+        <div class="ms-content ms-paris-hero">
+          <div class="ms-kicker">Portal cliente / MOVA / Paris</div>
+          <h1>Bienvenido al portal Cliente: <span class="ms-paris">Paris</span></h1>
+          <p>El espacio donde vive la operación de SEO y contenidos de Paris. Piezas, keywords, revisión e implementación, en un mismo lugar.</p>
+          <div class="ms-ops">
+            <button type="button" class="ms-op" data-mova-nav="revision"><span>Keywords</span><small>Paso 1 · Revisión</small></button>
+            <button type="button" class="ms-op" data-mova-nav="contenidos"><span>Contenidos</span><small>Paso 2 · Redacción</small></button>
+            <button type="button" class="ms-op locked" disabled><span>SEO</span><small>Próximo</small></button>
+            <button type="button" class="ms-op locked" disabled><span>Implementación</span><small>Próximo</small></button>
+          </div>
         </div>
       </div>
     </div>
   </section>
+
+  <!-- placeholders kept for JS ids used earlier -->
+  <select id="msRedactorSel" hidden></select>
+  <span id="msWhoName" hidden></span>
+  <div id="view-accesos" data-view="accesos" hidden></div>
+  <div id="view-redactor" data-view="redactor" hidden></div>
+  <div id="view-editor" data-view="editor" hidden></div>
+  <div id="msRoleGrid" hidden></div>
+  <div id="msEditorGrid" hidden></div>
+  <div id="msEditorSide" hidden></div>
 </div>
 
 <div id="mova-paris-root">
 
 <div class="ms-who-bar" id="msWhoBar">
   <div>Entraste como <b id="msParisWho">—</b> · <span id="msParisRol">Redactora</span> · cliente <b>Paris</b></div>
-  <button type="button" id="msBackShell">Volver a mis clientes</button>
+  <button type="button" id="msBackShell">Volver al inicio Paris</button>
 </div>
 
 
   <header class="topbar">
     <div style="display:flex;align-items:center;gap:.85rem;flex-wrap:wrap">
-      <a class="btn-back" href="#shell-redactor" data-mova-nav="shell" title="Volver a mis clientes">
-        <span class="chev" aria-hidden="true">‹</span> Volver a Paris
+      <a class="btn-back" href="#paris-home" data-mova-nav="paris-home" title="Volver al inicio Paris">
+        <span class="chev" aria-hidden="true">‹</span> Volver al inicio
       </a>
       <nav class="crumb-nav" aria-label="Ubicación">
         <a href="#shell-accesos" data-mova-nav="accesos" id="crumbRole">Accesos</a>
@@ -2304,24 +2326,29 @@ body.mv-lock #mova-paris-root{visibility:hidden!important;pointer-events:none!im
   }
 
   function goAccesos() {
-    // No cierra Google; solo vuelve a la puerta de roles (editor/cliente bloqueados)
-    showShell("accesos");
-    renderRoles();
+    goHub();
   }
 
-  function goRedactor() {
+  function goHub() {
     const auth = loadAuth();
     const u = (auth && auth.u) || window.MOVA_USER || {};
     const s = {
-      rol: "redactor",
+      rol: u.rol || "redactor",
       redactorId: "r-auth",
       nombre: u.nombre || "Redactora",
       correo: u.correo || "",
       clientes: Array.isArray(u.clientes) ? u.clientes : (auth && auth.u && auth.u.clientes) || []
     };
     saveSession(s);
-    renderRedactor();
-    showShell("redactor");
+    renderHub();
+    showShell("hub");
+    syncUserChip();
+  }
+  function goRedactor() { goHub(); }
+  function goParisHome() {
+    const s = loadSession() || {};
+    saveSession(s);
+    showShell("paris-home");
     syncUserChip();
   }
 
@@ -2329,10 +2356,22 @@ body.mv-lock #mova-paris-root{visibility:hidden!important;pointer-events:none!im
     goAccesos();
   }
 
-  function openParis() {
+  function openParis(paso) {
     const s = loadSession() || { rol: "redactor", nombre: (window.MOVA_USER && window.MOVA_USER.nombre) || "Redactora" };
     saveSession(s);
     showParis(s);
+    try {
+      if (paso === "revision" && typeof goView === "function") goView("revision");
+      if (paso === "redaccion" && typeof goView === "function") goView("redaccion");
+      if (paso === "redaccion") {
+        const btn = document.querySelector('[data-view="redaccion"]');
+        if (btn) btn.click();
+      }
+      if (paso === "revision") {
+        const btn = document.querySelector('[data-view="revision"]');
+        if (btn) btn.click();
+      }
+    } catch (e) {}
     if (typeof window.MOVA_PARIS_SYNC === "function") {
       window.MOVA_PARIS_SYNC().then((r) => {
         if (r && r.ok) console.info("[MOVA] sync n8n", r);
@@ -2366,13 +2405,13 @@ body.mv-lock #mova-paris-root{visibility:hidden!important;pointer-events:none!im
     });
   }
 
-  function renderRedactor() {
+  function renderHub() {
     const s = loadSession() || {};
     const nameEl = document.getElementById("msWhoName");
     if (nameEl) nameEl.textContent = s.nombre || "Redactora";
     const list = clienteListForSession(s);
     const note = document.getElementById("msAssignNote");
-    if (note) note.textContent = `${s.nombre || "Redactora"}: ${list.length} cliente(s).`;
+    if (note) note.textContent = list.length ? `${list.length} disponibles` : "Sin portales asignados";
     const grid = document.getElementById("msBulletGrid");
     const side = document.getElementById("msSideNav");
     if (!grid || !side) return;
@@ -2390,19 +2429,20 @@ body.mv-lock #mova-paris-root{visibility:hidden!important;pointer-events:none!im
         <div class="ms-bullet-top"><div class="ms-bullet-ico">${item.initials}</div><span class="ms-badge-live">LIVE</span></div>
         <h3>${item.name}</h3>
         <div class="ms-bullet-foot">
-          <div>${(item.tags || []).map((t) => `<span class="ms-tag">${t}</span>`).join("")}</div>
+          <div>${(item.tags || []).map((tg) => `<span class="ms-tag">${tg}</span>`).join("")}</div>
           <span class="ms-abrir">ABRIR ›</span>
         </div>`;
-      el.addEventListener("click", openParis);
+      el.addEventListener("click", () => goParisHome());
       grid.appendChild(el);
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "ms-side-item";
       btn.innerHTML = `<span class="ico">${item.initials}</span><span>${item.name}</span><span class="live">LIVE</span>`;
-      btn.addEventListener("click", openParis);
+      btn.addEventListener("click", () => goParisHome());
       side.appendChild(btn);
     });
   }
+  function renderRedactor() { renderHub(); }
 
   function afterAuthEnter(u, tok) {
     const exp = tok ? Math.min(tokExp(tok) || 0, Date.now() + AUTH_TTL) : Date.now() + AUTH_TTL;
@@ -2508,21 +2548,16 @@ body.mv-lock #mova-paris-root{visibility:hidden!important;pointer-events:none!im
     if (!nav) return;
     ev.preventDefault();
     const to = nav.getAttribute("data-mova-nav");
-    if (to === "accesos") goAccesos();
-    else if (to === "shell") goRedactor();
+    if (to === "accesos" || to === "hub") goHub();
+    else if (to === "shell" || to === "paris-home") goParisHome();
+    else if (to === "contenidos" || to === "redaccion") openParis("redaccion");
+    else if (to === "revision") openParis("revision");
     else if (to === "salir") mvSalir();
   });
 
   const back = document.getElementById("msBackShell");
-  if (back) back.addEventListener("click", () => goRedactor());
+  if (back) back.addEventListener("click", () => goParisHome());
 
-  // Chip usuario + salir en topbar redactor
-  const topNote = document.querySelector("#view-redactor .ms-topbar > div:last-child");
-  if (topNote) {
-    topNote.innerHTML = '<span class="ms-userchip">Sesión · <b data-ms-user></b></span> <button type="button" class="ms-salir" data-mova-nav="salir">Salir</button>';
-  }
-
-  renderRoles();
   document.body.classList.add("mova-in-shell");
 
   // Sesión Google vigente
