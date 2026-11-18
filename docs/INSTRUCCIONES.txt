@@ -1,0 +1,19 @@
+MOVA · Portal Redactor · Grupo Making OF — Instrucciones para Juan
+(cPanel = panel de hosting; n8n = herramienta de automatización; VB = visto bueno; KW = keyword)
+
+Patrón de /mova/seo: index.html es el shell (contraseña + Google) y abre cada herramienta en un iframe
+(modFrame) con URL absoluta https://acme-chile.cl/mova/seo/... Cada herramienta es 1 HTML autocontenido.
+No hay .htaccess en /seo, ni JS/CSS propios externos (solo Google Fonts, GSI y CDN).
+
+1) Respaldo: mover public_html/mova/seo/redactor.html actual a public_html/mova/seo/versiones_anteriores/redactor.html
+   y index.html actual a versiones_anteriores/index.html.
+2) Subir redactor.html  -> public_html/mova/seo/redactor.html   (permisos 644)
+3) Subir index.html     -> public_html/mova/seo/index.html      (permisos 644; agrega "Portal Redactor" al menú y tarjetas)
+4) n8n (https://grupomakingof.app.n8n.cloud): importar MOVA_Portal_Redactores_v3.json (incluye mova-revision-listo; en el nodo "Rev · Enviar Gmail" reemplazar la credencial REEMPLAZAR_CREDENCIAL_GMAIL por una cuenta Gmail OAuth2), asignar credencial
+   "Google Sheets account 3" si la pide, desactivar el flujo anterior y activar el v2 (mismas rutas de webhook).
+5) Google Cloud: el Client ID 352285024176-ki6a4n01f6vcbos3o12n9ql6uc6t2vq4 debe tener https://acme-chile.cl como
+   origen JavaScript autorizado.
+6) Probar: https://acme-chile.cl/mova/seo/ -> Portal Redactor, o directo https://acme-chile.cl/mova/seo/redactor.html
+   Mel (Melannie Manzur, @mkof.cl) ya está en Accesos como Editor, Vigente SI.
+Si sigue el error 500: revisar cPanel > Errors (log de errores) y el .htaccess de public_html y public_html/mova
+(no venían en el zip), y que carpetas tengan permisos 755 y archivos 644.

@@ -1,0 +1,196 @@
+{
+ "name": "MOVA · Portal Redactores · Auth (REDACTORES)",
+ "nodes": [
+  {
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "mova-auth-redactores",
+    "responseMode": "responseNode",
+    "options": {}
+   },
+   "id": "a4e60250-9959-4db7-a0e9-f0b20d5b7735",
+   "name": "Webhook mova-auth-redactores",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [
+    0,
+    0
+   ],
+   "webhookId": "f789bb7f-b9c9-415c-909b-729c342979b9"
+  },
+  {
+   "parameters": {
+    "jsCode": "let b = $input.first().json.body || {};\nif (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } }\nreturn [{ json: { token: String(b.token||'').trim() || 'sin-token', empresa: String(b.empresa||'').toUpperCase(), b } }];"
+   },
+   "id": "a6082b07-396f-46be-b808-6a7593535836",
+   "name": "Rd · Preparar",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    220,
+    0
+   ]
+  },
+  {
+   "parameters": {
+    "url": "={{ 'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent($('Rd · Preparar').first().json.token) }}",
+    "options": {
+     "response": {
+      "response": {
+       "neverError": true
+      }
+     },
+     "timeout": 15000
+    }
+   },
+   "id": "d641705f-0fe4-4f92-9aea-f8e118985c2f",
+   "name": "Rd · Google tokeninfo",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    440,
+    0
+   ],
+   "alwaysOutputData": true,
+   "onError": "continueRegularOutput"
+  },
+  {
+   "parameters": {
+    "url": "https://sheets.googleapis.com/v4/spreadsheets/REEMPLAZAR_ID_SHEET_ESTADO_Y_ACCESOS/values/Accesos!A2:F1000",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "googleSheetsOAuth2Api",
+    "options": {
+     "response": {
+      "response": {
+       "neverError": true
+      }
+     },
+     "timeout": 15000
+    }
+   },
+   "id": "68dc6932-500a-4062-b748-bb3c1463f2cd",
+   "name": "Rd · Leer Accesos",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    660,
+    0
+   ],
+   "credentials": {
+    "googleSheetsOAuth2Api": {
+     "id": "REEMPLAZAR_CREDENCIAL",
+     "name": "Google Sheets account - Josefa"
+    }
+   },
+   "alwaysOutputData": true,
+   "onError": "continueRegularOutput"
+  },
+  {
+   "parameters": {
+    "jsCode": "const CLIENT = '352285024176-ki6a4n01f6vcbos3o12n9ql6uc6t2vq4.apps.googleusercontent.com';\nconst MSG = 'Tu cuenta no está autorizada para el Portal Redactores. Contacta a tu ejecutivo de Grupo Making OF.';\nconst t = $('Rd · Google tokeninfo').first().json || {};\nconst acc = $('Rd · Leer Accesos').first().json || {};\nconst filas = Array.isArray(acc.values) ? acc.values : (acc.error ? null : []);\nconst mail = String(t.email || '').toLowerCase().trim();\nconst no = (motivo, re) => [{ json: { ok:false, motivo, reingresar:!!re, correo:mail, nombre:'', nivel:'', rol:'', clientes:[] } }];\nif (!mail || t.error || t.error_description) return no('Tu sesión de Google no es válida o expiró. Vuelve a iniciar sesión.', true);\nif (t.aud !== CLIENT) return no('Token emitido para otra aplicación.', true);\nif (String(t.email_verified) === 'false') return no('Tu correo de Google no está verificado.');\nif (Number(t.exp||0)*1000 < Date.now()) return no('Tu sesión de Google expiró. Vuelve a iniciar sesión.', true);\nif (!Array.isArray(filas)) return no('Error interno al leer la lista de accesos.');\n// Columnas Accesos: A Nombre | B Correo | C Nivel de acceso | D Vigente | E Fecha | F Clientes (opcional)\nconst r = filas.find(x => String((x||[])[1]||'').toLowerCase().trim() === mail);\nif (!r) return no(MSG);\nconst vig = String(r[3]||'').toUpperCase().trim();\nif (vig !== 'SI' && vig !== 'SÍ') return no(MSG);\nconst nivel = String(r[2]||'').trim();\nconst n = nivel.toLowerCase();\nlet rol = '';\nif (/^(editor|desarrollador|admin)/.test(n)) rol = 'editor';\nelse if (/^redact/.test(n)) rol = 'redactor';\nelse if (/^cliente/.test(n)) rol = 'cliente';\nif (!rol || rol === 'cliente') return no('Tu perfil no tiene acceso al Portal Redactores.');\nconst clientes = String(r[5]||'paris').split(/[,;]/).map(s=>s.trim().toLowerCase()).filter(Boolean);\nreturn [{ json: { ok:true, motivo:'', reingresar:false, correo:mail, nombre:String(r[0]||'').trim(), nivel, rol, clientes } }];"
+   },
+   "id": "a37229c3-3da7-4889-9139-043fc7f56891",
+   "name": "Rd · Validar acceso",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    880,
+    0
+   ]
+  },
+  {
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "={{ JSON.stringify($json) }}",
+    "options": {
+     "responseCode": 200,
+     "responseHeaders": {
+      "entries": [
+       {
+        "name": "Access-Control-Allow-Origin",
+        "value": "*"
+       },
+       {
+        "name": "Cache-Control",
+        "value": "no-store"
+       },
+       {
+        "name": "Content-Type",
+        "value": "application/json; charset=utf-8"
+       }
+      ]
+     }
+    }
+   },
+   "id": "c0182b91-d0d1-4560-afdf-c808f5a9378d",
+   "name": "Rd · Responder",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.1,
+   "position": [
+    1100,
+    0
+   ]
+  }
+ ],
+ "connections": {
+  "Webhook mova-auth-redactores": {
+   "main": [
+    [
+     {
+      "node": "Rd · Preparar",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Rd · Preparar": {
+   "main": [
+    [
+     {
+      "node": "Rd · Google tokeninfo",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Rd · Google tokeninfo": {
+   "main": [
+    [
+     {
+      "node": "Rd · Leer Accesos",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Rd · Leer Accesos": {
+   "main": [
+    [
+     {
+      "node": "Rd · Validar acceso",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Rd · Validar acceso": {
+   "main": [
+    [
+     {
+      "node": "Rd · Responder",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ },
+ "settings": {
+  "executionOrder": "v1"
+ },
+ "active": false
+}
