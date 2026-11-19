@@ -2,12 +2,166 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="0; url=panel-general.html" />
-  <title>Portal Redactores MOVA</title>
-  <link rel="canonical" href="panel-general.html" />
-  <script>location.replace("panel-general.html");</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MOVA — Accesos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --petroleo: #091914;
+      --petroleo2: #133429;
+      --verde: #93C64A;
+      --celeste: #99EADA;
+      --txt: #FDFBF7;
+      --muted: rgba(253, 251, 247, 0.62);
+      --line: rgba(147, 198, 74, 0.28);
+      --line-soft: rgba(253, 251, 247, 0.08);
+      --card: #0e1f19;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: "Lato", sans-serif;
+      color: var(--txt);
+      background: var(--petroleo);
+    }
+    body::before {
+      content: "";
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 65% 45% at 12% -8%, rgba(147, 198, 74, 0.14), transparent 55%),
+        radial-gradient(ellipse 45% 40% at 92% 18%, rgba(153, 234, 218, 0.08), transparent 50%),
+        linear-gradient(180deg, var(--petroleo) 0%, var(--petroleo2) 48%, var(--petroleo) 100%);
+    }
+    .wrap {
+      position: relative; z-index: 1;
+      max-width: 920px; margin: 0 auto;
+      padding: 2.5rem 1.25rem 3rem;
+    }
+    .brand {
+      display: flex; align-items: center; gap: .75rem;
+      margin-bottom: 2rem;
+    }
+    .mark {
+      width: 2.4rem; height: 2.4rem; border-radius: 10px;
+      display: grid; place-items: center;
+      background: var(--verde); color: var(--petroleo);
+      font-family: "Instrument Sans", sans-serif; font-weight: 700;
+    }
+    .brand strong {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 1.15rem; display: block;
+    }
+    .brand small { color: var(--muted); font-size: .8rem; }
+    h1 {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: clamp(1.6rem, 3vw, 2.1rem);
+      font-weight: 700; margin-bottom: .45rem;
+    }
+    .lead { color: var(--muted); max-width: 36rem; line-height: 1.5; margin-bottom: 1.75rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      display: flex; flex-direction: column; gap: .7rem;
+      text-align: left; text-decoration: none; color: inherit;
+      background: var(--card);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius);
+      padding: 1.15rem 1.1rem 1.2rem;
+      min-height: 11.5rem;
+      transition: border-color .2s, transform .15s, background .2s;
+    }
+    .card:not(.locked):hover {
+      border-color: var(--line);
+      background: #122820;
+      transform: translateY(-2px);
+    }
+    .card.locked { opacity: .55; cursor: default; }
+    .card .ico {
+      width: 2.2rem; height: 2.2rem; border-radius: 8px;
+      display: grid; place-items: center;
+      font-family: "Instrument Sans", sans-serif; font-weight: 700; font-size: .85rem;
+      background: rgba(147, 198, 74, 0.18); color: var(--verde);
+    }
+    .card h2 {
+      font-family: "Instrument Sans", sans-serif;
+      font-size: 1.05rem; font-weight: 700;
+    }
+    .card p { color: var(--muted); font-size: .86rem; line-height: 1.45; flex: 1; }
+    .card .foot {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    }
+    .card .foot .go { color: var(--verde); }
+    .card .foot .soon { color: var(--muted); }
+    .note {
+      margin-top: 1.5rem; padding: .9rem 1rem;
+      border: 1px solid var(--line-soft); border-radius: 12px;
+      color: var(--muted); font-size: .84rem; line-height: 1.45;
+    }
+    .note a { color: var(--celeste); }
+    footer {
+      margin-top: 2rem; color: var(--muted); font-size: .78rem;
+    }
+  </style>
 </head>
 <body>
-  <p><a href="panel-general.html">Entrar al portal de redactores</a></p>
+  <div class="wrap">
+    <div class="brand">
+      <div class="mark">M</div>
+      <div>
+        <strong>MOVA</strong>
+        <small>Grupo Making OF · Portal Redactores</small>
+      </div>
+    </div>
+
+    <h1>Elige tu acceso</h1>
+    <p class="lead">Tres puertas: editor (ve todo), redactor (solo sus clientes) y cliente (después).</p>
+
+    <div class="grid" id="roleGrid"></div>
+
+    <div class="note">
+      Entrada del zip: este <code>index.html</code>.
+      Sheets y n8n: ver <code>ENTREGA-CLAUDE-DRIVE.md</code>.
+    </div>
+
+    <footer>Grupo Making OF · MOVA</footer>
+  </div>
+
+  <script src="config-accesos.js"></script>
+  <script>
+    const cfg = window.MOVA_CONFIG;
+    const order = ["editor", "redactor", "cliente"];
+    const icos = { editor: "ED", redactor: "RD", cliente: "CL" };
+    const grid = document.getElementById("roleGrid");
+
+    order.forEach((key) => {
+      const r = cfg.roles[key];
+      const locked = !!r.soon;
+      const el = document.createElement(locked ? "div" : "a");
+      if (!locked) {
+        el.href = r.panel;
+      } else {
+        el.classList.add("locked");
+      }
+      el.classList.add("card");
+      el.innerHTML = `
+        <div class="ico">${icos[key]}</div>
+        <h2>${r.label}</h2>
+        <p>${r.desc}</p>
+        <div class="foot">
+          <span>${locked ? "Próximo" : "Abrir"}</span>
+          <span class="${locked ? "soon" : "go"}">${locked ? "PRONTO" : "ENTRAR ›"}</span>
+        </div>
+      `;
+      grid.appendChild(el);
+    });
+  </script>
 </body>
 </html>

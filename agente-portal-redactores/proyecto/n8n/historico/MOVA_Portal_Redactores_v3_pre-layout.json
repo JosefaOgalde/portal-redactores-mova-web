@@ -1,0 +1,2285 @@
+{
+  "name": "MOVA_Portal_Redactores_v3",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mova-auth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "7deef203-d224-40ec-af3f-8679cb85c250",
+      "name": "WH mova-auth",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1536,
+        128
+      ],
+      "webhookId": "c80a3955-49b6-44c6-b2c4-c1fcf790a794"
+    },
+    {
+      "parameters": {
+        "jsCode": "let b = $input.first().json.body || {};\nif (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } }\nreturn [{ json: { token: String(b.token || '').trim() || 'sin-token', b } }];"
+      },
+      "id": "dc81a51a-8e62-4b68-a82a-c015f6cad76a",
+      "name": "Auth · Preparar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1328,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent($('Auth · Preparar').first().json.token) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "b870c699-6b83-4d8d-8cc3-c1e8c10b3270",
+      "name": "Auth · Google tokeninfo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1104,
+        128
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1yKKKpgAhgwA4IK8vXOzoZx2iMCWqPC5TgYf1D81xvk0/values/Accesos!A2:F1000",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "03700a25-50ea-4bf7-a55a-65f6e7b896a1",
+      "name": "Auth · Leer Accesos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -880,
+        128
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const CLIENT = '352285024176-ki6a4n01f6vcbos3o12n9ql6uc6t2vq4.apps.googleusercontent.com';\nconst MSG = 'Tu cuenta no esta autorizada para acceder a este portal. Contacta a tu ejecutivo de Grupo Making Of.';\nconst p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date()).map(x => [x.type, x.value]));\nconst ts = `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;\n// Nivel de acceso → rol del portal\nconst rolDe = n => { const x = String(n || '').toLowerCase(); if (/editor|desarroll|admin/.test(x)) return 'editor'; if (/redact/.test(x)) return 'redactor'; if (/cliente/.test(x)) return 'cliente'; return ''; };\nfunction acceso(t, filas) {\n  const mail = String(t.email || '').toLowerCase().trim();\n  const no = (motivo, reingresar) => ({ ok: false, motivo, reingresar: !!reingresar, correo: mail, nombre: '', nivel: '', rol: '', clientes: [], fila: null });\n  if (t.error && !t.email && !t.error_description) return no('Error interno al validar con Google. Intenta de nuevo.', true);\n  if (!mail || t.error || t.error_description) return no('Tu sesion de Google no es valida o expiro. Vuelve a iniciar sesion.', true);\n  if (t.aud !== CLIENT) return no('Token emitido para otra aplicacion.', true);\n  if (String(t.email_verified) === 'false') return no('Tu correo de Google no esta verificado.');\n  if (Number(t.exp || 0) * 1000 < Date.now()) return no('Tu sesion de Google expiro. Vuelve a iniciar sesion.', true);\n  if (!Array.isArray(filas)) return no('Error interno al leer la lista de accesos. Intenta mas tarde.');\n  // Accesos: A Nombre | B Correo | C Nivel de acceso | D Vigente | E Fecha | F Clientes (opcional, vacio = todos)\n  const i = filas.findIndex(r => String((r || [])[1] || '').toLowerCase().trim() === mail);\n  if (i < 0) return no(MSG);\n  const r = filas[i];\n  const vig = String(r[3] || '').toUpperCase().trim();\n  if (vig !== 'SI' && vig !== 'SÍ') return { ...no(MSG), nombre: String(r[0] || '').trim() };\n  const nivel = String(r[2] || '').trim(), rol = rolDe(nivel);\n  if (!rol) return { ...no(MSG), nombre: String(r[0] || '').trim(), nivel };\n  const clientes = String(r[5] || '').split(/[,;]/).map(s => s.trim().toLowerCase()).filter(Boolean);\n  return { ok: true, motivo: '', reingresar: false, correo: mail, nombre: String(r[0] || '').trim(), nivel, rol, clientes, fila: i + 2 };\n}\nconst acc = $('Auth · Leer Accesos').first().json || {};\nconst filas = Array.isArray(acc.values) ? acc.values : (acc.error ? null : []);\nconst t = $('Auth · Google tokeninfo').first().json || {};\nlet a = acceso(t, filas);\n// Historico: A Fecha | B Nombre | C Correo | D Nivel de acceso | E Resultado | F Motivo\nconst hist = [ts, a.nombre || '', a.correo || 'desconocido', a.ok ? a.nivel : '', a.ok ? 'OK' : 'RECHAZADO', a.ok ? '' : a.motivo];\na = { ...a, histBody: { values: [hist] }, fechaBody: { values: [[ts]] } };\nreturn [{ json: { ...a, ts } }];"
+      },
+      "id": "b89a33e0-329c-4516-9961-3c7a576bb2fd",
+      "name": "Auth · Validar acceso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1yKKKpgAhgwA4IK8vXOzoZx2iMCWqPC5TgYf1D81xvk0:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ requests: [ { insertDimension: { range: { sheetId: 1002918525, dimension: 'ROWS', startIndex: 1, endIndex: 2 }, inheritFromBefore: false } }, { updateCells: { start: { sheetId: 1002918525, rowIndex: 1, columnIndex: 0 }, rows: [ { values: $('Auth · Validar acceso').first().json.histBody.values[0].map(v => ({ userEnteredValue: { stringValue: String(v) } })) } ], fields: 'userEnteredValue' } } ] }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "3f08cab4-5172-4a6a-8e54-2d79d4c40428",
+      "name": "Auth · Registrar Historico",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -432,
+        128
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "17addcdd-7183-4afd-b578-6e7cc30c3406",
+              "leftValue": "={{ $('Auth · Validar acceso').first().json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "870af298-2292-4604-94df-3ec8898237e0",
+      "name": "Auth · ¿OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://sheets.googleapis.com/v4/spreadsheets/1yKKKpgAhgwA4IK8vXOzoZx2iMCWqPC5TgYf1D81xvk0/values/Accesos!E' + $('Auth · Validar acceso').first().json.fila + '?valueInputOption=USER_ENTERED' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Auth · Validar acceso').first().json.fechaBody) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "7d93a180-3e2e-4887-833f-22c6ae3b1778",
+      "name": "Auth · Actualizar Fecha Accesos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        0
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify((({ok,motivo,nombre,correo,nivel,rol,clientes,reingresar}) => ({ok,motivo,nombre,correo,nivel,rol,clientes,reingresar}))($('Auth · Validar acceso').first().json)) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "f114274c-0ce0-4cc0-94d8-abb7f18c2a00",
+      "name": "Auth · Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mova-sync-historico",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "f8750182-26a5-461d-9c92-d43c378f24ea",
+      "name": "WH mova-sync-historico",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1536,
+        528
+      ],
+      "webhookId": "f61099be-27ef-45aa-ba23-7a8652497f79"
+    },
+    {
+      "parameters": {
+        "jsCode": "let b = $input.first().json.body || {};\nif (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } }\nreturn [{ json: { token: String(b.token || '').trim() || 'sin-token', b } }];"
+      },
+      "id": "345fbeaf-a45d-4546-b3e8-f9b0af048a37",
+      "name": "Hist · Preparar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1328,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent($('Hist · Preparar').first().json.token) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "aa1be5ef-a4c7-4319-9b28-1b62517fdab6",
+      "name": "Hist · Google tokeninfo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1104,
+        528
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1yKKKpgAhgwA4IK8vXOzoZx2iMCWqPC5TgYf1D81xvk0/values/Accesos!A2:F1000",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "c2ec862c-abaf-4e97-bd28-d0ea1a8daa76",
+      "name": "Hist · Leer Accesos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -880,
+        528
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const CLIENT = '352285024176-ki6a4n01f6vcbos3o12n9ql6uc6t2vq4.apps.googleusercontent.com';\nconst MSG = 'Tu cuenta no esta autorizada para acceder a este portal. Contacta a tu ejecutivo de Grupo Making Of.';\nconst p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date()).map(x => [x.type, x.value]));\nconst ts = `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;\n// Nivel de acceso → rol del portal\nconst rolDe = n => { const x = String(n || '').toLowerCase(); if (/editor|desarroll|admin/.test(x)) return 'editor'; if (/redact/.test(x)) return 'redactor'; if (/cliente/.test(x)) return 'cliente'; return ''; };\nfunction acceso(t, filas) {\n  const mail = String(t.email || '').toLowerCase().trim();\n  const no = (motivo, reingresar) => ({ ok: false, motivo, reingresar: !!reingresar, correo: mail, nombre: '', nivel: '', rol: '', clientes: [], fila: null });\n  if (t.error && !t.email && !t.error_description) return no('Error interno al validar con Google. Intenta de nuevo.', true);\n  if (!mail || t.error || t.error_description) return no('Tu sesion de Google no es valida o expiro. Vuelve a iniciar sesion.', true);\n  if (t.aud !== CLIENT) return no('Token emitido para otra aplicacion.', true);\n  if (String(t.email_verified) === 'false') return no('Tu correo de Google no esta verificado.');\n  if (Number(t.exp || 0) * 1000 < Date.now()) return no('Tu sesion de Google expiro. Vuelve a iniciar sesion.', true);\n  if (!Array.isArray(filas)) return no('Error interno al leer la lista de accesos. Intenta mas tarde.');\n  // Accesos: A Nombre | B Correo | C Nivel de acceso | D Vigente | E Fecha | F Clientes (opcional, vacio = todos)\n  const i = filas.findIndex(r => String((r || [])[1] || '').toLowerCase().trim() === mail);\n  if (i < 0) return no(MSG);\n  const r = filas[i];\n  const vig = String(r[3] || '').toUpperCase().trim();\n  if (vig !== 'SI' && vig !== 'SÍ') return { ...no(MSG), nombre: String(r[0] || '').trim() };\n  const nivel = String(r[2] || '').trim(), rol = rolDe(nivel);\n  if (!rol) return { ...no(MSG), nombre: String(r[0] || '').trim(), nivel };\n  const clientes = String(r[5] || '').split(/[,;]/).map(s => s.trim().toLowerCase()).filter(Boolean);\n  return { ok: true, motivo: '', reingresar: false, correo: mail, nombre: String(r[0] || '').trim(), nivel, rol, clientes, fila: i + 2 };\n}\nconst acc = $('Hist · Leer Accesos').first().json || {};\nconst filas = Array.isArray(acc.values) ? acc.values : (acc.error ? null : []);\nconst t = $('Hist · Google tokeninfo').first().json || {};\nlet a = acceso(t, filas);\nreturn [{ json: { ...a, ts } }];"
+      },
+      "id": "db24fde5-338a-458f-9a09-17fe569f365a",
+      "name": "Hist · Validar acceso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "07ea674e-3111-4956-a9f1-fb2f0e843fa2",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a2f3b620-d1fe-447b-8a57-3fed887e1f5a",
+      "name": "Hist · ¿OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, motivo: $('Hist · Validar acceso').first().json.motivo, reingresar: !!$('Hist · Validar acceso').first().json.reingresar }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "281dd294-0f02-47b4-a5f4-839b9c53f214",
+      "name": "Hist · Rechazo",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -208,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1vi7G3kqyo2paIiEqimT1A57DsgxdzlpbG3p69_6TXiM?fields=sheets.properties",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "c0ec340c-dc79-47d1-81fd-7469af381a08",
+      "name": "Hist · Sheets tabs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -208,
+        528
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const s = ($json.sheets || []).find(x => String(x.properties.sheetId) === '1739267264');\nif (!s) return [{ json: { range: null } }];\nreturn [{ json: { range: `'${s.properties.title}'!A:Z` } }];"
+      },
+      "id": "a9d703fc-beed-4341-bb03-46ff27926037",
+      "name": "Hist · Rango gid 1739267264",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://sheets.googleapis.com/v4/spreadsheets/1vi7G3kqyo2paIiEqimT1A57DsgxdzlpbG3p69_6TXiM/values/' + encodeURIComponent($json.range || 'A1') }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "58723c1e-8def-43fd-86ac-3b06f5873ab0",
+      "name": "Hist · Sheets valores",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        528
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]/g,'');\nconst pick = (row, hdr, alias) => { for (const a of alias) { const i = hdr.indexOf(norm(a)); if (i>=0 && row[i]!==undefined && row[i]!=='') return String(row[i]).trim(); } return ''; };\nconst toObjs = (values) => { if (!values || !values.length) return {hdr:[],rows:[]}; return {hdr: values[0].map(norm), rows: values.slice(1).filter(r => r.some(c => String(c).trim()!==''))}; };\nconst {hdr, rows} = toObjs($json.values);\nconst historico = rows.map((r,i) => ({\n  anio: Number((pick(r,hdr,['año','anio','year','fecha']).match(/\\d{4}/)||[])[0]) || null,\n  tipo: pick(r,hdr,['tipo','type','tipo de pagina','plantilla']),\n  keyword: pick(r,hdr,['keyword','kw','palabra clave','keyword principal']),\n  url: pick(r,hdr,['url','link','url trabajada']),\n  _i: i\n})).filter(x => x.url || x.keyword)\n .sort((a,b) => (b.anio||0)-(a.anio||0) || b._i-a._i)   // más actual → más antigua\n .map(({_i,...x}) => x);\nreturn [{ json: { ok: true, total: historico.length, actualizado: new Date().toISOString(), historico } }];"
+      },
+      "id": "dbd3ee26-3432-41ec-9058-e514f8e0ea14",
+      "name": "Hist · Normalizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "19a9b15d-38ae-45ef-b304-1dbec00caac6",
+      "name": "Hist · Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mova-sync-contenidos",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "9c89ee88-63b8-4a6f-9f71-3d4e99ceaf7a",
+      "name": "WH mova-sync-contenidos",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1536,
+        928
+      ],
+      "webhookId": "b614f090-2cb4-4b07-a0d5-28f825c68d5a"
+    },
+    {
+      "parameters": {
+        "jsCode": "let b = $input.first().json.body || {};\nif (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } }\nreturn [{ json: { token: String(b.token || '').trim() || 'sin-token', b } }];"
+      },
+      "id": "02c563f1-488d-4ccc-8bb5-1e085c7ef0d7",
+      "name": "Cont · Preparar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1328,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent($('Cont · Preparar').first().json.token) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "fd74516a-dc94-4716-887d-a5d1e6992397",
+      "name": "Cont · Google tokeninfo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1104,
+        928
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1yKKKpgAhgwA4IK8vXOzoZx2iMCWqPC5TgYf1D81xvk0/values/Accesos!A2:F1000",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "3fd133a8-2653-487c-808e-6e2166eb0147",
+      "name": "Cont · Leer Accesos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -880,
+        928
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const CLIENT = '352285024176-ki6a4n01f6vcbos3o12n9ql6uc6t2vq4.apps.googleusercontent.com';\nconst MSG = 'Tu cuenta no esta autorizada para acceder a este portal. Contacta a tu ejecutivo de Grupo Making Of.';\nconst p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date()).map(x => [x.type, x.value]));\nconst ts = `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;\n// Nivel de acceso → rol del portal\nconst rolDe = n => { const x = String(n || '').toLowerCase(); if (/editor|desarroll|admin/.test(x)) return 'editor'; if (/redact/.test(x)) return 'redactor'; if (/cliente/.test(x)) return 'cliente'; return ''; };\nfunction acceso(t, filas) {\n  const mail = String(t.email || '').toLowerCase().trim();\n  const no = (motivo, reingresar) => ({ ok: false, motivo, reingresar: !!reingresar, correo: mail, nombre: '', nivel: '', rol: '', clientes: [], fila: null });\n  if (t.error && !t.email && !t.error_description) return no('Error interno al validar con Google. Intenta de nuevo.', true);\n  if (!mail || t.error || t.error_description) return no('Tu sesion de Google no es valida o expiro. Vuelve a iniciar sesion.', true);\n  if (t.aud !== CLIENT) return no('Token emitido para otra aplicacion.', true);\n  if (String(t.email_verified) === 'false') return no('Tu correo de Google no esta verificado.');\n  if (Number(t.exp || 0) * 1000 < Date.now()) return no('Tu sesion de Google expiro. Vuelve a iniciar sesion.', true);\n  if (!Array.isArray(filas)) return no('Error interno al leer la lista de accesos. Intenta mas tarde.');\n  // Accesos: A Nombre | B Correo | C Nivel de acceso | D Vigente | E Fecha | F Clientes (opcional, vacio = todos)\n  const i = filas.findIndex(r => String((r || [])[1] || '').toLowerCase().trim() === mail);\n  if (i < 0) return no(MSG);\n  const r = filas[i];\n  const vig = String(r[3] || '').toUpperCase().trim();\n  if (vig !== 'SI' && vig !== 'SÍ') return { ...no(MSG), nombre: String(r[0] || '').trim() };\n  const nivel = String(r[2] || '').trim(), rol = rolDe(nivel);\n  if (!rol) return { ...no(MSG), nombre: String(r[0] || '').trim(), nivel };\n  const clientes = String(r[5] || '').split(/[,;]/).map(s => s.trim().toLowerCase()).filter(Boolean);\n  return { ok: true, motivo: '', reingresar: false, correo: mail, nombre: String(r[0] || '').trim(), nivel, rol, clientes, fila: i + 2 };\n}\nconst acc = $('Cont · Leer Accesos').first().json || {};\nconst filas = Array.isArray(acc.values) ? acc.values : (acc.error ? null : []);\nconst t = $('Cont · Google tokeninfo').first().json || {};\nlet a = acceso(t, filas);\nreturn [{ json: { ...a, ts } }];"
+      },
+      "id": "b504a2b4-6659-41db-b5f9-f84ab606f31e",
+      "name": "Cont · Validar acceso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "4ff13fb3-4273-4e78-8442-71f59be9df8a",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "23564d67-77c9-47e9-8d6b-f16027951a38",
+      "name": "Cont · ¿OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, motivo: $('Cont · Validar acceso').first().json.motivo, reingresar: !!$('Cont · Validar acceso').first().json.reingresar }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "000febde-444b-4979-bdf3-08ffd6391b90",
+      "name": "Cont · Rechazo",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -208,
+        1072
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1vi7G3kqyo2paIiEqimT1A57DsgxdzlpbG3p69_6TXiM?fields=sheets.properties",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "f6bbb00c-a010-4ca0-bb76-dcf0601b4432",
+      "name": "Cont · Sheets tabs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -208,
+        928
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','setiembre','octubre','noviembre','diciembre'];\nconst tabs = ($json.sheets || []).map(s => s.properties.title);\nconst meses = tabs.filter(t => MESES.some(m => t.toLowerCase().includes(m)));\nconst qs = meses.map(t => 'ranges=' + encodeURIComponent(`'${t}'!A:AZ`)).join('&') || 'ranges=A1';\nreturn [{ json: { meses, qs } }];"
+      },
+      "id": "0cf4bf08-ac6c-42e0-9299-d950cb565197",
+      "name": "Cont · Rangos pestañas mes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://sheets.googleapis.com/v4/spreadsheets/1vi7G3kqyo2paIiEqimT1A57DsgxdzlpbG3p69_6TXiM/values:batchGet?' + $json.qs }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "4b30a9fc-e422-41a0-9a36-948a42edabaf",
+      "name": "Cont · Sheets batchGet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        928
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]/g,'');\nconst pick = (row, hdr, alias) => { for (const a of alias) { const i = hdr.indexOf(norm(a)); if (i>=0 && row[i]!==undefined && row[i]!=='') return String(row[i]).trim(); } return ''; };\nconst toObjs = (values) => { if (!values || !values.length) return {hdr:[],rows:[]}; return {hdr: values[0].map(norm), rows: values.slice(1).filter(r => r.some(c => String(c).trim()!==''))}; };\nconst u = $('Cont · Validar acceso').first().json;\nconst cliente = String(($('Cont · Preparar').first().json.b || {}).cliente || 'paris').toLowerCase();\n// Editor ve todo; redactor solo clientes asignados (columna F de Accesos; vacía = todos)\nif (u.rol === 'redactor' && u.clientes.length && !u.clientes.includes(cliente)) {\n  return [{ json: { ok: true, rol: u.rol, cliente, meses: [], defaultMes: null, total: 0, contenidos: [] } }];\n}\nif (u.rol === 'cliente') return [{ json: { ok: false, motivo: 'Vista cliente aun no disponible.', contenidos: [] } }];\nconst MES = {enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,setiembre:9,octubre:10,noviembre:11,diciembre:12};\nconst mesKey = t => { const l=t.toLowerCase(); const m=Object.keys(MES).find(k=>l.includes(k)); const y=Number((l.match(/\\d{2,4}/)||[0])[0]); return (y<100?2000+y:y)*100+(MES[m]||0); };\nlet contenidos = [];\nfor (const vr of ($('Cont · Sheets batchGet').first().json.valueRanges || [])) {\n  const tab = String(vr.range || '').split('!')[0].replace(/^'|'$/g,'');\n  const {hdr, rows} = toObjs(vr.values);\n  rows.forEach((r,i) => {\n    const anchors = [];\n    for (let n=1;n<=10;n++) {\n      const a = pick(r,hdr,[`anchor ${n}`,`anchor${n}`,`anchor text ${n}`]);\n      const uu = pick(r,hdr,[`url anchor ${n}`,`url ${n}`,`link ${n}`,`url${n}`]);\n      const p = pick(r,hdr,[`posicion ${n}`,`pos ${n}`,`ranking ${n}`]);\n      if (a || uu) anchors.push({ a, u: uu, p });\n    }\n    const st = pick(r,hdr,['status','estado','estatus']);\n    contenidos.push({\n      mes: tab, semana: Number((pick(r,hdr,['semana','week']).match(/\\d/)||[0])[0]) || null, ord: i+1,\n      keyword: pick(r,hdr,['keyword','kw','palabra clave','keyword principal']),\n      tipo: pick(r,hdr,['tipo','type','tipo de pagina']),\n      url: pick(r,hdr,['url','link','url destino']),\n      texto: pick(r,hdr,['texto','contenido','texto seo']),\n      status: st || 'pendiente', listo: /ok|listo|publicado/i.test(st),\n      vbEditor: /ok|si|sí/i.test(pick(r,hdr,['vb editor','visto bueno','vb'])) ? 'ok' : 'pendiente',\n      comentarioRev: pick(r,hdr,['comentario','comentarios','observacion']),\n      anchors, _k: mesKey(tab)\n    });\n  });\n}\n\n// v2: aplicar lo guardado desde el portal (hoja Portal_Estado: texto, status, vbEditor)\ntry {\n  const pe = ($('Cont · Leer Portal_Estado').first().json || {}).values || [];\n  const h = (pe[0] || []).map(norm); const ix = k => h.indexOf(norm(k));\n  const est = {};\n  pe.slice(1).forEach(r => { const id = String(r[ix('id')] || '').trim(); if (id) est[id] = r; });\n  contenidos.forEach(x => {\n    const r = est[[cliente, x.mes, x.semana, x.url || x.keyword].join('|')];\n    if (!r) return;\n    const g = k => { const i = ix(k); return i >= 0 ? String(r[i] ?? '').trim() : ''; };\n    if (g('texto')) x.texto = g('texto');\n    if (g('status')) { x.status = g('status'); x.listo = /ok|listo|publicado/i.test(x.status); }\n    if (g('vbEditor')) x.vbEditor = /ok|si|sí/i.test(g('vbEditor')) ? 'ok' : 'pendiente';\n  });\n} catch (e) {}\ncontenidos = contenidos.filter(x => x.keyword || x.url)\n  .sort((a,b) => b._k-a._k || (b.semana||0)-(a.semana||0) || a.ord-b.ord)   // mes actual→viejo, semana 4→1\n  .map(({_k,...x}) => x);\nconst meses = [...new Set(contenidos.map(x => x.mes))];\nreturn [{ json: { ok: true, rol: u.rol, cliente, meses, defaultMes: meses[0] || null, total: contenidos.length, actualizado: new Date().toISOString(), contenidos } }];"
+      },
+      "id": "f9651121-b471-4bec-af2d-b3c09b3786f7",
+      "name": "Cont · Normalizar + rol",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "cfc0bd0d-f31c-4016-a6f4-669b3f1440aa",
+      "name": "Cont · Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mova-guardar-texto",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "994c09be-5699-47f7-9826-0381e3ac7b44",
+      "name": "WH mova-guardar-texto",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1536,
+        1328
+      ],
+      "webhookId": "4439b743-985f-4fd6-9f23-13465ae2a817"
+    },
+    {
+      "parameters": {
+        "jsCode": "let b = $input.first().json.body || {};\nif (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } }\nreturn [{ json: { token: String(b.token || '').trim() || 'sin-token', b } }];"
+      },
+      "id": "84dbbf38-8825-4f11-8a1b-a3042cceb615",
+      "name": "Texto · Preparar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1328,
+        1328
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent($('Texto · Preparar').first().json.token) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "a8e2b9d6-e0d9-43b4-817a-ca839e1c4106",
+      "name": "Texto · Google tokeninfo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1104,
+        1328
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1yKKKpgAhgwA4IK8vXOzoZx2iMCWqPC5TgYf1D81xvk0/values/Accesos!A2:F1000",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "1e62a950-2251-40b4-be69-4a5265caf4ca",
+      "name": "Texto · Leer Accesos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -880,
+        1328
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const CLIENT = '352285024176-ki6a4n01f6vcbos3o12n9ql6uc6t2vq4.apps.googleusercontent.com';\nconst MSG = 'Tu cuenta no esta autorizada para acceder a este portal. Contacta a tu ejecutivo de Grupo Making Of.';\nconst p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date()).map(x => [x.type, x.value]));\nconst ts = `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;\n// Nivel de acceso → rol del portal\nconst rolDe = n => { const x = String(n || '').toLowerCase(); if (/editor|desarroll|admin/.test(x)) return 'editor'; if (/redact/.test(x)) return 'redactor'; if (/cliente/.test(x)) return 'cliente'; return ''; };\nfunction acceso(t, filas) {\n  const mail = String(t.email || '').toLowerCase().trim();\n  const no = (motivo, reingresar) => ({ ok: false, motivo, reingresar: !!reingresar, correo: mail, nombre: '', nivel: '', rol: '', clientes: [], fila: null });\n  if (t.error && !t.email && !t.error_description) return no('Error interno al validar con Google. Intenta de nuevo.', true);\n  if (!mail || t.error || t.error_description) return no('Tu sesion de Google no es valida o expiro. Vuelve a iniciar sesion.', true);\n  if (t.aud !== CLIENT) return no('Token emitido para otra aplicacion.', true);\n  if (String(t.email_verified) === 'false') return no('Tu correo de Google no esta verificado.');\n  if (Number(t.exp || 0) * 1000 < Date.now()) return no('Tu sesion de Google expiro. Vuelve a iniciar sesion.', true);\n  if (!Array.isArray(filas)) return no('Error interno al leer la lista de accesos. Intenta mas tarde.');\n  // Accesos: A Nombre | B Correo | C Nivel de acceso | D Vigente | E Fecha | F Clientes (opcional, vacio = todos)\n  const i = filas.findIndex(r => String((r || [])[1] || '').toLowerCase().trim() === mail);\n  if (i < 0) return no(MSG);\n  const r = filas[i];\n  const vig = String(r[3] || '').toUpperCase().trim();\n  if (vig !== 'SI' && vig !== 'SÍ') return { ...no(MSG), nombre: String(r[0] || '').trim() };\n  const nivel = String(r[2] || '').trim(), rol = rolDe(nivel);\n  if (!rol) return { ...no(MSG), nombre: String(r[0] || '').trim(), nivel };\n  const clientes = String(r[5] || '').split(/[,;]/).map(s => s.trim().toLowerCase()).filter(Boolean);\n  return { ok: true, motivo: '', reingresar: false, correo: mail, nombre: String(r[0] || '').trim(), nivel, rol, clientes, fila: i + 2 };\n}\nconst acc = $('Texto · Leer Accesos').first().json || {};\nconst filas = Array.isArray(acc.values) ? acc.values : (acc.error ? null : []);\nconst t = $('Texto · Google tokeninfo').first().json || {};\nlet a = acceso(t, filas);\nreturn [{ json: { ...a, ts } }];"
+      },
+      "id": "f1d83822-f8b5-4c08-a8ef-c9300d07917b",
+      "name": "Texto · Validar acceso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        1328
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "2f3f8c8f-6177-4b30-85b6-13d1440f43de",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "eea79165-353f-4fa5-b891-09be8d318724",
+      "name": "Texto · ¿OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        1328
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, motivo: $('Texto · Validar acceso').first().json.motivo, reingresar: !!$('Texto · Validar acceso').first().json.reingresar }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "b1a6f9bd-1c82-45cd-a2cc-8c9709ab4cd1",
+      "name": "Texto · Rechazo",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -208,
+        1472
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Texto · Preparar').first().json.b || {};\nconst u = $('Texto · Validar acceso').first().json;\nconst id = [b.cliente||'paris', b.mes, b.semana, b.url || b.keyword].join('|');\nreturn [{ json: { id, cliente: b.cliente||'paris', mes: b.mes||'', semana: b.semana||'', keyword: b.keyword||'', url: b.url||'', texto: b.texto ?? '', vbEditor: b.vbEditor ?? '', status: b.status ?? '', redactor: u.correo, actualizado: u.ts } }];"
+      },
+      "id": "8f3c6bf9-c7f6-4021-a5b5-3614a563a4b6",
+      "name": "Texto · Preparar fila",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        1328
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1yKKKpgAhgwA4IK8vXOzoZx2iMCWqPC5TgYf1D81xvk0"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Portal_Estado"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "cliente": "={{ $json.cliente }}",
+            "mes": "={{ $json.mes }}",
+            "semana": "={{ $json.semana }}",
+            "keyword": "={{ $json.keyword }}",
+            "url": "={{ $json.url }}",
+            "texto": "={{ $json.texto }}",
+            "status": "={{ $json.status }}",
+            "redactor": "={{ $json.redactor }}",
+            "actualizado": "={{ $json.actualizado }}"
+          },
+          "matchingColumns": [
+            "id"
+          ]
+        },
+        "options": {}
+      },
+      "id": "61504e31-9112-4178-bd15-a545531db5f8",
+      "name": "Texto · Upsert Portal_Estado",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        1328
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "b51b3861-753e-41a8-b7be-21d893d5ac46",
+      "name": "Texto · Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        1328
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mova-vb-editor",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "58116233-970c-4aec-b2cb-2f98c69c7196",
+      "name": "WH mova-vb-editor",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1536,
+        1728
+      ],
+      "webhookId": "4a8e27f3-1ad1-4881-aee4-f5e89cd7fc91"
+    },
+    {
+      "parameters": {
+        "jsCode": "let b = $input.first().json.body || {};\nif (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } }\nreturn [{ json: { token: String(b.token || '').trim() || 'sin-token', b } }];"
+      },
+      "id": "dbe7a192-5fc0-47e0-9ef8-4c9451223f1c",
+      "name": "VB · Preparar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1328,
+        1728
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent($('VB · Preparar').first().json.token) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "820fadfb-14ac-40fa-b735-0e93a31b17aa",
+      "name": "VB · Google tokeninfo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1104,
+        1728
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1yKKKpgAhgwA4IK8vXOzoZx2iMCWqPC5TgYf1D81xvk0/values/Accesos!A2:F1000",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "2dfef6db-783b-46bf-b4d3-5d76e3eecfc9",
+      "name": "VB · Leer Accesos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -880,
+        1728
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const CLIENT = '352285024176-ki6a4n01f6vcbos3o12n9ql6uc6t2vq4.apps.googleusercontent.com';\nconst MSG = 'Tu cuenta no esta autorizada para acceder a este portal. Contacta a tu ejecutivo de Grupo Making Of.';\nconst p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date()).map(x => [x.type, x.value]));\nconst ts = `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;\n// Nivel de acceso → rol del portal\nconst rolDe = n => { const x = String(n || '').toLowerCase(); if (/editor|desarroll|admin/.test(x)) return 'editor'; if (/redact/.test(x)) return 'redactor'; if (/cliente/.test(x)) return 'cliente'; return ''; };\nfunction acceso(t, filas) {\n  const mail = String(t.email || '').toLowerCase().trim();\n  const no = (motivo, reingresar) => ({ ok: false, motivo, reingresar: !!reingresar, correo: mail, nombre: '', nivel: '', rol: '', clientes: [], fila: null });\n  if (t.error && !t.email && !t.error_description) return no('Error interno al validar con Google. Intenta de nuevo.', true);\n  if (!mail || t.error || t.error_description) return no('Tu sesion de Google no es valida o expiro. Vuelve a iniciar sesion.', true);\n  if (t.aud !== CLIENT) return no('Token emitido para otra aplicacion.', true);\n  if (String(t.email_verified) === 'false') return no('Tu correo de Google no esta verificado.');\n  if (Number(t.exp || 0) * 1000 < Date.now()) return no('Tu sesion de Google expiro. Vuelve a iniciar sesion.', true);\n  if (!Array.isArray(filas)) return no('Error interno al leer la lista de accesos. Intenta mas tarde.');\n  // Accesos: A Nombre | B Correo | C Nivel de acceso | D Vigente | E Fecha | F Clientes (opcional, vacio = todos)\n  const i = filas.findIndex(r => String((r || [])[1] || '').toLowerCase().trim() === mail);\n  if (i < 0) return no(MSG);\n  const r = filas[i];\n  const vig = String(r[3] || '').toUpperCase().trim();\n  if (vig !== 'SI' && vig !== 'SÍ') return { ...no(MSG), nombre: String(r[0] || '').trim() };\n  const nivel = String(r[2] || '').trim(), rol = rolDe(nivel);\n  if (!rol) return { ...no(MSG), nombre: String(r[0] || '').trim(), nivel };\n  const clientes = String(r[5] || '').split(/[,;]/).map(s => s.trim().toLowerCase()).filter(Boolean);\n  return { ok: true, motivo: '', reingresar: false, correo: mail, nombre: String(r[0] || '').trim(), nivel, rol, clientes, fila: i + 2 };\n}\nconst acc = $('VB · Leer Accesos').first().json || {};\nconst filas = Array.isArray(acc.values) ? acc.values : (acc.error ? null : []);\nconst t = $('VB · Google tokeninfo').first().json || {};\nlet a = acceso(t, filas);\nif (a.ok && a.rol !== 'editor') a = { ...a, ok: false, motivo: 'Solo el editor puede dar visto bueno.' };\nreturn [{ json: { ...a, ts } }];"
+      },
+      "id": "d96f5977-c3a6-468d-94dc-6d5a8bc65f49",
+      "name": "VB · Validar acceso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        1728
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "a6b459f3-93fa-4b1e-9e73-e55af1faafdf",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "96d85771-52db-470f-bd11-fd30f0f77e6f",
+      "name": "VB · ¿OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        1728
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, motivo: $('VB · Validar acceso').first().json.motivo, reingresar: !!$('VB · Validar acceso').first().json.reingresar }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "6786aa8f-8150-4d9e-a253-d215b6a6d506",
+      "name": "VB · Rechazo",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -208,
+        1872
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('VB · Preparar').first().json.b || {};\nconst u = $('VB · Validar acceso').first().json;\nconst id = [b.cliente||'paris', b.mes, b.semana, b.url || b.keyword].join('|');\nreturn [{ json: { id, cliente: b.cliente||'paris', mes: b.mes||'', semana: b.semana||'', keyword: b.keyword||'', url: b.url||'', texto: b.texto ?? '', vbEditor: b.vbEditor ?? '', status: b.status ?? '', redactor: u.correo, actualizado: u.ts } }];"
+      },
+      "id": "335e9a8a-1d2b-4bb8-9cd6-ff5880be18c9",
+      "name": "VB · Preparar fila",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        1728
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1yKKKpgAhgwA4IK8vXOzoZx2iMCWqPC5TgYf1D81xvk0"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Portal_Estado"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "cliente": "={{ $json.cliente }}",
+            "mes": "={{ $json.mes }}",
+            "semana": "={{ $json.semana }}",
+            "keyword": "={{ $json.keyword }}",
+            "url": "={{ $json.url }}",
+            "vbEditor": "={{ $json.vbEditor }}",
+            "actualizado": "={{ $json.actualizado }}"
+          },
+          "matchingColumns": [
+            "id"
+          ]
+        },
+        "options": {}
+      },
+      "id": "a5b49164-4be3-4850-b674-9c0f8276d3dc",
+      "name": "VB · Upsert Portal_Estado",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        1728
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "bbdcbc3b-5646-4517-b844-3afcf7bc4ab5",
+      "name": "VB · Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        1728
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1yKKKpgAhgwA4IK8vXOzoZx2iMCWqPC5TgYf1D81xvk0/values/Portal_Estado!A:K",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "166bdddd-e2cc-411e-a282-044156a68bee",
+      "name": "Cont · Leer Portal_Estado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        336,
+        1120
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mova-revision-listo",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "681f7e54-e0eb-43e7-a185-9fb14793c5d4",
+      "name": "WH mova-revision-listo",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        1800
+      ],
+      "webhookId": "c907a8af-32e6-45c9-965b-6ac414055e8b"
+    },
+    {
+      "parameters": {
+        "jsCode": "let b = $input.first().json.body || {};\nif (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } }\nreturn [{ json: { token: String(b.token || '').trim() || 'sin-token', b } }];"
+      },
+      "id": "bedfe6ab-2894-4500-a6ee-070fdab111d3",
+      "name": "Rev · Preparar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        1800
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent($('Rev · Preparar').first().json.token) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "827c3b85-6495-46c7-b0b9-e3067e673445",
+      "name": "Rev · Google tokeninfo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        1800
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1yKKKpgAhgwA4IK8vXOzoZx2iMCWqPC5TgYf1D81xvk0/values/Accesos!A2:F1000",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "3fdc2ff0-13a6-4958-a16f-4e7c721cba53",
+      "name": "Rev · Leer Accesos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        1800
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const CLIENT = '352285024176-ki6a4n01f6vcbos3o12n9ql6uc6t2vq4.apps.googleusercontent.com';\nconst MSG = 'Tu cuenta no esta autorizada para acceder a este portal. Contacta a tu ejecutivo de Grupo Making Of.';\nconst p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date()).map(x => [x.type, x.value]));\nconst ts = `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;\n// Nivel de acceso → rol del portal\nconst rolDe = n => { const x = String(n || '').toLowerCase(); if (/editor|desarroll|admin/.test(x)) return 'editor'; if (/redact/.test(x)) return 'redactor'; if (/cliente/.test(x)) return 'cliente'; return ''; };\nfunction acceso(t, filas) {\n  const mail = String(t.email || '').toLowerCase().trim();\n  const no = (motivo, reingresar) => ({ ok: false, motivo, reingresar: !!reingresar, correo: mail, nombre: '', nivel: '', rol: '', clientes: [], fila: null });\n  if (t.error && !t.email && !t.error_description) return no('Error interno al validar con Google. Intenta de nuevo.', true);\n  if (!mail || t.error || t.error_description) return no('Tu sesion de Google no es valida o expiro. Vuelve a iniciar sesion.', true);\n  if (t.aud !== CLIENT) return no('Token emitido para otra aplicacion.', true);\n  if (String(t.email_verified) === 'false') return no('Tu correo de Google no esta verificado.');\n  if (Number(t.exp || 0) * 1000 < Date.now()) return no('Tu sesion de Google expiro. Vuelve a iniciar sesion.', true);\n  if (!Array.isArray(filas)) return no('Error interno al leer la lista de accesos. Intenta mas tarde.');\n  // Accesos: A Nombre | B Correo | C Nivel de acceso | D Vigente | E Fecha | F Clientes (opcional, vacio = todos)\n  const i = filas.findIndex(r => String((r || [])[1] || '').toLowerCase().trim() === mail);\n  if (i < 0) return no(MSG);\n  const r = filas[i];\n  const vig = String(r[3] || '').toUpperCase().trim();\n  if (vig !== 'SI' && vig !== 'SÍ') return { ...no(MSG), nombre: String(r[0] || '').trim() };\n  const nivel = String(r[2] || '').trim(), rol = rolDe(nivel);\n  if (!rol) return { ...no(MSG), nombre: String(r[0] || '').trim(), nivel };\n  const clientes = String(r[5] || '').split(/[,;]/).map(s => s.trim().toLowerCase()).filter(Boolean);\n  return { ok: true, motivo: '', reingresar: false, correo: mail, nombre: String(r[0] || '').trim(), nivel, rol, clientes, fila: i + 2 };\n}\nconst acc = $('Rev · Leer Accesos').first().json || {};\nconst filas = Array.isArray(acc.values) ? acc.values : (acc.error ? null : []);\nconst t = $('Rev · Google tokeninfo').first().json || {};\nlet a = acceso(t, filas);\nif (a.ok && a.rol === 'cliente') a = { ...a, ok: false, motivo: 'Sin acceso.' };\nreturn [{ json: { ...a, ts } }];"
+      },
+      "id": "699e1b94-cce2-47c7-ac81-1e0864bf38cc",
+      "name": "Rev · Validar acceso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        1800
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "a6b459f3-93fa-4b1e-9e73-e55af1faafdf",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c63d3c13-f9c8-41a8-ac19-55683350d5e1",
+      "name": "Rev · ¿OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        600,
+        1800
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, motivo: $('Rev · Validar acceso').first().json.motivo, reingresar: !!$('Rev · Validar acceso').first().json.reingresar }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "6e362cde-a7b6-4d05-8b6b-a38aee84d391",
+      "name": "Rev · Rechazo",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        2000
+      ]
+    },
+    {
+      "id": "7e01016a-50b7-40ce-bde1-de7e35958a44",
+      "name": "Rev · Armar correo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        1800
+      ],
+      "parameters": {
+        "jsCode": "const b = $('Rev · Preparar').first().json.b || {};\nconst u = $('Rev · Validar acceso').first().json;\nconst esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');\nconst rech = Array.isArray(b.rechazadas) ? b.rechazadas : [];\nconst dest = String(b.destinatario || '').trim();\nconst filas = rech.map(r => `<tr><td>${esc(r.n)}</td><td>${esc(r['año'])}</td><td>${esc(r.tipo)}</td><td>${esc(r.keyword)}</td><td><a href=\"${esc(r.url)}\">${esc(r.url)}</a></td><td>${esc(r.comentario)}</td></tr>`).join('');\nconst tabla = rech.length ? `<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px\"><thead style=\"background:#0066cc;color:#fff\"><tr><th>#</th><th>Año</th><th>Tipo</th><th>Keyword</th><th>URL</th><th>Comentario</th></tr></thead><tbody>${filas}</tbody></table>` : '<p>Todas las keywords quedaron con VB (sin rechazadas).</p>';\nconst html = `<div style=\"font-family:Arial,sans-serif;color:#091914\"><h2 style=\"margin:0 0 8px\">Paris · Revisión de keywords</h2><p>Revisó: <b>${esc(u.nombre || u.correo)}</b> (${esc(u.correo)})<br>Mes: ${esc(b.mes)} · Semana: ${esc(b.semana)}<br>Total: ${esc(b.total)} · Aprobadas (VB): ${esc(b.aprobadas)} · Rechazadas (X): ${rech.length}</p>${tabla}<p style=\"color:#5C7468;font-size:12px\">MOVA · Portal Redactor · Grupo Making OF</p></div>`;\nreturn [{ json: { dest, asunto: `Paris · Revisión keywords · ${rech.length} con X (${b.mes || ''} sem ${b.semana || ''})`, html, rechazadas: rech.length,\n  histBody: { values: [[u.ts, u.nombre || '', u.correo, u.nivel || '', 'REVISION_LISTO', `${rech.length} X / ${b.aprobadas} VB · ${b.mes || ''} sem ${b.semana || ''} -> ${dest}`]] } } }];"
+      }
+    },
+    {
+      "id": "f8a0b5a4-6990-489c-8ba2-af140dcae106",
+      "name": "Rev · Enviar Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1000,
+        1800
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "sendTo": "={{ $json.dest }}",
+        "subject": "={{ $json.asunto }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR_CREDENCIAL_GMAIL",
+          "name": "REEMPLAZAR_CREDENCIAL_GMAIL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1yKKKpgAhgwA4IK8vXOzoZx2iMCWqPC5TgYf1D81xvk0:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ requests: [ { insertDimension: { range: { sheetId: 1002918525, dimension: 'ROWS', startIndex: 1, endIndex: 2 }, inheritFromBefore: false } }, { updateCells: { start: { sheetId: 1002918525, rowIndex: 1, columnIndex: 0 }, rows: [ { values: $('Rev · Armar correo').first().json.histBody.values[0].map(v => ({ userEnteredValue: { stringValue: String(v) } })) } ], fields: 'userEnteredValue' } } ] }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "3b339b23-5bd3-4327-b088-0f1cfa811ca6",
+      "name": "Rev · Registrar Historico",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        1800
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w8fF5t27inVPTw6C",
+          "name": "Google Sheets account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: !$('Rev · Enviar Gmail').first().json.error, enviados: $('Rev · Armar correo').first().json.rechazadas, motivo: $('Rev · Enviar Gmail').first().json.error ? 'Gmail no envió el correo' : '' }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "297fcfba-67fd-4b2a-ad4c-acf28f3b4e10",
+      "name": "Rev · Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        1800
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WH mova-auth": {
+      "main": [
+        [
+          {
+            "node": "Auth · Preparar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth · Preparar": {
+      "main": [
+        [
+          {
+            "node": "Auth · Google tokeninfo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth · Google tokeninfo": {
+      "main": [
+        [
+          {
+            "node": "Auth · Leer Accesos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth · Leer Accesos": {
+      "main": [
+        [
+          {
+            "node": "Auth · Validar acceso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth · Validar acceso": {
+      "main": [
+        [
+          {
+            "node": "Auth · Registrar Historico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth · Registrar Historico": {
+      "main": [
+        [
+          {
+            "node": "Auth · ¿OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth · ¿OK?": {
+      "main": [
+        [
+          {
+            "node": "Auth · Actualizar Fecha Accesos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Auth · Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth · Actualizar Fecha Accesos": {
+      "main": [
+        [
+          {
+            "node": "Auth · Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH mova-sync-historico": {
+      "main": [
+        [
+          {
+            "node": "Hist · Preparar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hist · Preparar": {
+      "main": [
+        [
+          {
+            "node": "Hist · Google tokeninfo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hist · Google tokeninfo": {
+      "main": [
+        [
+          {
+            "node": "Hist · Leer Accesos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hist · Leer Accesos": {
+      "main": [
+        [
+          {
+            "node": "Hist · Validar acceso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hist · Validar acceso": {
+      "main": [
+        [
+          {
+            "node": "Hist · ¿OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hist · ¿OK?": {
+      "main": [
+        [
+          {
+            "node": "Hist · Sheets tabs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Hist · Rechazo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hist · Sheets tabs": {
+      "main": [
+        [
+          {
+            "node": "Hist · Rango gid 1739267264",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hist · Rango gid 1739267264": {
+      "main": [
+        [
+          {
+            "node": "Hist · Sheets valores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hist · Sheets valores": {
+      "main": [
+        [
+          {
+            "node": "Hist · Normalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hist · Normalizar": {
+      "main": [
+        [
+          {
+            "node": "Hist · Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH mova-sync-contenidos": {
+      "main": [
+        [
+          {
+            "node": "Cont · Preparar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cont · Preparar": {
+      "main": [
+        [
+          {
+            "node": "Cont · Google tokeninfo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cont · Google tokeninfo": {
+      "main": [
+        [
+          {
+            "node": "Cont · Leer Accesos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cont · Leer Accesos": {
+      "main": [
+        [
+          {
+            "node": "Cont · Validar acceso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cont · Validar acceso": {
+      "main": [
+        [
+          {
+            "node": "Cont · ¿OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cont · ¿OK?": {
+      "main": [
+        [
+          {
+            "node": "Cont · Sheets tabs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cont · Rechazo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cont · Sheets tabs": {
+      "main": [
+        [
+          {
+            "node": "Cont · Rangos pestañas mes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cont · Rangos pestañas mes": {
+      "main": [
+        [
+          {
+            "node": "Cont · Sheets batchGet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cont · Sheets batchGet": {
+      "main": [
+        [
+          {
+            "node": "Cont · Leer Portal_Estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cont · Normalizar + rol": {
+      "main": [
+        [
+          {
+            "node": "Cont · Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH mova-guardar-texto": {
+      "main": [
+        [
+          {
+            "node": "Texto · Preparar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto · Preparar": {
+      "main": [
+        [
+          {
+            "node": "Texto · Google tokeninfo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto · Google tokeninfo": {
+      "main": [
+        [
+          {
+            "node": "Texto · Leer Accesos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto · Leer Accesos": {
+      "main": [
+        [
+          {
+            "node": "Texto · Validar acceso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto · Validar acceso": {
+      "main": [
+        [
+          {
+            "node": "Texto · ¿OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto · ¿OK?": {
+      "main": [
+        [
+          {
+            "node": "Texto · Preparar fila",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Texto · Rechazo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto · Preparar fila": {
+      "main": [
+        [
+          {
+            "node": "Texto · Upsert Portal_Estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto · Upsert Portal_Estado": {
+      "main": [
+        [
+          {
+            "node": "Texto · Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH mova-vb-editor": {
+      "main": [
+        [
+          {
+            "node": "VB · Preparar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VB · Preparar": {
+      "main": [
+        [
+          {
+            "node": "VB · Google tokeninfo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VB · Google tokeninfo": {
+      "main": [
+        [
+          {
+            "node": "VB · Leer Accesos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VB · Leer Accesos": {
+      "main": [
+        [
+          {
+            "node": "VB · Validar acceso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VB · Validar acceso": {
+      "main": [
+        [
+          {
+            "node": "VB · ¿OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VB · ¿OK?": {
+      "main": [
+        [
+          {
+            "node": "VB · Preparar fila",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "VB · Rechazo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VB · Preparar fila": {
+      "main": [
+        [
+          {
+            "node": "VB · Upsert Portal_Estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VB · Upsert Portal_Estado": {
+      "main": [
+        [
+          {
+            "node": "VB · Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cont · Leer Portal_Estado": {
+      "main": [
+        [
+          {
+            "node": "Cont · Normalizar + rol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH mova-revision-listo": {
+      "main": [
+        [
+          {
+            "node": "Rev · Preparar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rev · Preparar": {
+      "main": [
+        [
+          {
+            "node": "Rev · Google tokeninfo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rev · Google tokeninfo": {
+      "main": [
+        [
+          {
+            "node": "Rev · Leer Accesos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rev · Leer Accesos": {
+      "main": [
+        [
+          {
+            "node": "Rev · Validar acceso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rev · Validar acceso": {
+      "main": [
+        [
+          {
+            "node": "Rev · ¿OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rev · ¿OK?": {
+      "main": [
+        [
+          {
+            "node": "Rev · Armar correo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rev · Rechazo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rev · Armar correo": {
+      "main": [
+        [
+          {
+            "node": "Rev · Enviar Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rev · Enviar Gmail": {
+      "main": [
+        [
+          {
+            "node": "Rev · Registrar Historico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rev · Registrar Historico": {
+      "main": [
+        [
+          {
+            "node": "Rev · Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1,
+    "availableInMCP": true
+  },
+  "versionId": "c9891051-03ad-4eee-afd1-b2cefe003dfa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fa13afcfe482479dd22819d90245811d846e1ab5f84d98d25dce078fb941de64"
+  },
+  "id": "sgJh8TlIYxCp8whh",
+  "tags": []
+}

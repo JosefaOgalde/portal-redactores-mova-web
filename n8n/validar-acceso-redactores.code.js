@@ -1,0 +1,26 @@
+const CLIENT = '352285024176-ki6a4n01f6vcbos3o12n9ql6uc6t2vq4.apps.googleusercontent.com';
+const MSG = 'Tu cuenta no está autorizada para el Portal Redactores. Contacta a tu ejecutivo de Grupo Making OF.';
+const t = $('Rd · Google tokeninfo').first().json || {};
+const acc = $('Rd · Leer Accesos').first().json || {};
+const filas = Array.isArray(acc.values) ? acc.values : (acc.error ? null : []);
+const mail = String(t.email || '').toLowerCase().trim();
+const no = (motivo, re) => [{ json: { ok:false, motivo, reingresar:!!re, correo:mail, nombre:'', nivel:'', rol:'', clientes:[] } }];
+if (!mail || t.error || t.error_description) return no('Tu sesión de Google no es válida o expiró. Vuelve a iniciar sesión.', true);
+if (t.aud !== CLIENT) return no('Token emitido para otra aplicación.', true);
+if (String(t.email_verified) === 'false') return no('Tu correo de Google no está verificado.');
+if (Number(t.exp||0)*1000 < Date.now()) return no('Tu sesión de Google expiró. Vuelve a iniciar sesión.', true);
+if (!Array.isArray(filas)) return no('Error interno al leer la lista de accesos.');
+// Columnas Accesos: A Nombre | B Correo | C Nivel de acceso | D Vigente | E Fecha | F Clientes (opcional)
+const r = filas.find(x => String((x||[])[1]||'').toLowerCase().trim() === mail);
+if (!r) return no(MSG);
+const vig = String(r[3]||'').toUpperCase().trim();
+if (vig !== 'SI' && vig !== 'SÍ') return no(MSG);
+const nivel = String(r[2]||'').trim();
+const n = nivel.toLowerCase();
+let rol = '';
+if (/^(editor|desarrollador|admin)/.test(n)) rol = 'editor';
+else if (/^redact/.test(n)) rol = 'redactor';
+else if (/^cliente/.test(n)) rol = 'cliente';
+if (!rol || rol === 'cliente') return no('Tu perfil no tiene acceso al Portal Redactores.');
+const clientes = String(r[5]||'paris').split(/[,;]/).map(s=>s.trim().toLowerCase()).filter(Boolean);
+return [{ json: { ok:true, motivo:'', reingresar:false, correo:mail, nombre:String(r[0]||'').trim(), nivel, rol, clientes } }];
