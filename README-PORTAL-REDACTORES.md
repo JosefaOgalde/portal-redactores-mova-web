@@ -1,6 +1,8 @@
 # MOVA · Portal Redactores (Paris) · Grupo Making OF
 
-Respaldo oficial del proyecto Portal Redactores. Actualizado al 18 de noviembre de 2026.
+**Workspace único:** este repo (`portal-redactores-mova-web`). No usar `portal-redactores-mova-paris` ni Origin `josefa/portal-redactores`. Ver `docs/WORKSPACE_UNICO.md`.
+
+Respaldo oficial del proyecto Portal Redactores. Actualizado al 19 de noviembre de 2026.
 Responsable: Josefa Ogalde. Editora: Melannie Manzur (Mel). Aprobación y paso a producción: Juan Medina. Redactora de prueba: Adria Campos.
 
 ## Qué es

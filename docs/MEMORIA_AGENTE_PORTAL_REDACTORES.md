@@ -28,7 +28,9 @@
 - La Matriz es la fuente oficial (INFORME es réplica, no usar). Iniciativas en la hoja INICIATIVAS de la Matriz.
 - WP PUBLISHER (carga masiva HTML) no es parte de Portal Redactor.
 - Carpeta Drive del equipo: 1wDrSDyBdJDaKRV7BqdecxKLYWk0MMAba.
-- Repositorio en Cursor: https://cursor.com/codebase/josefa/portal-redactores (vacío al 18 nov 2026).
+- Workspace único: https://github.com/JosefaOgalde/portal-redactores-mova-web (environment Cursor Cloud del mismo nombre).
+- Origin `josefa/portal-redactores` quedó vacío con README que redirige al canónico (19 nov 2026). No abrir agentes ahí.
+- Repo viejo `portal-redactores-mova-paris` = primer entregable; no usar.
 
 ## Pendientes
 - Josefa tiene una v5 propia (redactor.html 151 KB y MOVA_Portal_Redactores_v5.json 77 KB) que el agente no tiene; aquí va la v5 de 152 KB y el flujo n8n v4.
