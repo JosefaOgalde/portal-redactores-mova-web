@@ -1,17 +1,25 @@
-# Workspace único · Portal Redactores
+# Proyecto único · Portal Redactores
 
-**Canónico (usar siempre):** https://github.com/JosefaOgalde/portal-redactores-mova-web
+## Abre solo esto en Cursor
 
-## Duplicados (no usar)
+**Origin:** `josefa/portal-redactores`  
+https://origin.cursor.com/josefa/portal-redactores
 
-| Repo | Qué era | Acción |
-|---|---|---|
-| `JosefaOgalde/portal-redactores-mova-paris` | Primer entregable (oct 2026), privado | Archivar o eliminar en GitHub |
-| `josefa/portal-redactores` (Origin) | Codebase Cursor vacío | Solo tiene README que redirige aquí |
+Ya tiene el HTML v5, n8n, docs y el respaldo del agente (sincronizado 19 nov 2026).
 
-## Environment Cursor Cloud
+## Qué sigue apareciendo (y cómo sacarlo)
 
-Único environment: `josefaogalde/portal-redactores-mova-web`  
-Dashboard: https://cursor.com/dashboard/cloud-agents/environments/e/bc54b115-cd62-11f1-bec7-b2318963e0b6
+| Entrada | Acción |
+|---|---|
+| GitHub `portal-redactores-mova-web` | Mismo trabajo (Pages). Si no quieres verlo doble: en Cursor abre solo Origin. O en tu Mac corre `scripts/unificar-portal-redactores.sh` para crear mirror y borrar el stub. |
+| GitHub `portal-redactores-mova-paris` | Primer entregable. Settings → **Archive**. |
+
+## Script en tu Mac
+
+```bash
+bash scripts/unificar-portal-redactores.sh
+```
+
+Requiere `origin` CLI logueado (`origin auth login`). El cloud agent **no** puede borrar/crear mirror en el namespace `josefa` (token sin ese scope).
 
 Actualizado: 19 nov 2026 (America/Santiago).
